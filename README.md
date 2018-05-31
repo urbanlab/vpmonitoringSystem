@@ -16,4 +16,4 @@ Liste des composants nécessaires :
 
 (Optionnel : )
 -2 support LED
--1 ProtoShield
+-1 Grove ProtoShield
