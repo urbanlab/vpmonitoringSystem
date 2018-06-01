@@ -1,4 +1,4 @@
-# Projet-Stage
+# Universal Remote
 Universal remote controler with arduino
 
 Library Download : https://github.com/markszabo/IRremoteESP8266
