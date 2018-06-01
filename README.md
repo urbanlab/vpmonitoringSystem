@@ -22,6 +22,8 @@ When the switch is desactivated, you can activate the box with internet and the 
 
 
 /***********************************************************************************************************************************/
+# Télécommande universelle
+
 Télécommande universelle commandée par Arduino
 
 Téléchargement de la librairie : https://github.com/markszabo/IRremoteESP8266
