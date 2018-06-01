@@ -144,11 +144,6 @@ void setup(){
     irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR), EEPROMReadlong(BITS_ADDR));      //On envoie le code qui correspond au code de la télécommande
     
     Serial.println("Projecteur allumee");
-    
-    Serial.println(EEPROMReadlong(TYPE_ADDR));     //On affiche le numéro du type de la télécommande
-    Serial.println(EEPROMReadlong(CODE_ADDR));     //On affiche le code du bouton de la télécommande
-    Serial.println(EEPROMReadlong(BITS_ADDR));     //On affiche le nombre de bits
-    Serial.println(TestCode);
 
     server.send(200, "text/plain", "Projecteur allumee");
     
@@ -234,28 +229,6 @@ long EEPROMReadlong(long address)
       return ((four << 0) & 0xFF) + ((three << 8) & 0xFFFF) + ((two << 16) & 0xFFFFFF) + ((one << 24) & 0xFFFFFFFF);
       }
 
-/*      
-// --------------------------------------------------------------------------------------
-// On écrit en int dans l'EEPROM
-// --------------------------------------------------------------------------------------
-void eeprom_write(int addr, uint64_t f) {
-unsigned char *buf = (unsigned char*)(&f);
-for ( int i = 0 ; i < (uint64_t)sizeof(f) ; i++ ) {
-EEPROM.write(addr+i, buf[i]);
-}
-}
-
-// --------------------------------------------------------------------------------------
-// On lit en int dans l'EEPROM
-// --------------------------------------------------------------------------------------
-float eeprom_read(int addr) {
-uint64_t f;
-unsigned char *buf = (unsigned char*)(&f);
-for ( int i = 0 ; i < (uint64_t)sizeof(f) ; i++ ) {
-buf[i] = EEPROM.read(addr+i);
-}
-return f;
-}*/
 
 // --------------------------------------------------------------------------------------------------------------
 // Loop
