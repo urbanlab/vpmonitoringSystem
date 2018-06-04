@@ -50,10 +50,7 @@ decode_results results;
 // Affichage de la page web de base 
 // --------------------------------------------------------------------------------------
 void handleRoot() {
-  char temp[400];
-  int sec = millis() / 1000;
-  int min = sec / 60;
-  int hr = min / 60;
+  char temp[2000];
 
   snprintf ( temp, 400,
 
@@ -70,9 +67,8 @@ void handleRoot() {
     <a input type href=\"/on\"/ >/Allumer le projecteur/</a>\
     <a href=\"/off\"/ >Eteindre le projecteur/</a>\
   </body>\
-</html>",
-
-    hr, min % 60, sec % 60
+</html>"
+            
   );
   server.send ( 200, "text/html", temp );
 
