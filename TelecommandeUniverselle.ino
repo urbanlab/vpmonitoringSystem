@@ -20,6 +20,7 @@
 // --------------------------------------------------------------------------------------
 #define TYPE_ADDR 0         //On définit les adresses de départ pour l'EEPROM
 #define CODE_ADDR 128
+#define CODE_ADDR2 256
 #define BITS_ADDR 64
 
 const int inter=15;       
@@ -28,6 +29,8 @@ const int IR_LED = 13;
 const int A_LED = 12;
 int lecture;
 int TestCode;
+int TestCode2;
+int CodeRecep=0;
 
 // --------------------------------------------------------------------------------------
 // Identifiant de connexion au wifi
@@ -49,28 +52,57 @@ decode_results results;
 // --------------------------------------------------------------------------------------
 // Affichage de la page web de base 
 // --------------------------------------------------------------------------------------
+String htmlHeader(String title) {
+ return "<html>\
+          <head>\
+            <title>Erasme VP</title>\
+            <style>\
+              body { font-family: Arial, Helvetica, Sans-Serif; Color: #4CAF50;}\
+               #carre  {box-sizing: content-box; width: auto;height: auto; padding: 15px; border: 2px solid #4CAF50};\
+            </style>\
+          </head>\
+          <body>\
+          <h1>"+ title +"</h1>";
+        }
+
+String htmlFooter() {
+ return "</body>\
+        </html>";
+}
+
+// --------------------------------------------------------------------------------------
+// Affichage de la page web de base 
+// --------------------------------------------------------------------------------------
 void handleRoot() {
-  char temp[2000];
+  CodeRecep=0;
+  String page;
+  page = htmlHeader("Home");
+  page +=
+        "<h3>Allumage et extinction</h3>\
+            <div id='carre'>\
+                  <h4>1.Codes identiques</h4>\
+               <p><a input type href='on' >Allumer le projecteur</a>\
+                  <a input type href='off1'>Eteindre le projecteur</a>\
+                  <a input type href='off2'>Eteindre avec confirmation</a></p>\
+                  <h4>2.Codes differents</h4>\  
+               <p><a input type href='on'>Allumer le projecteur</a>\
+                  <a input type href='off3'>Eteindre le projecteur</a></p>\
+            </div>\
+          <h3>Parametrage</h3>\
+            <div id='carre'>\
+               <h4>Nom du DNS</h4>\
+                  <p><input type='text' id='nom'>.local</a>\
+                    <a input type href='xxxx'>enregistrer</a>\
+               <h4>Protocole d'extinction</h4>\  
+                    <p><a input type href='xxxx'>Eteindre</a></p>\
+                    <p><a input type href='xxxx'>Eteindre avec confirmation</a></p>\
+                    <p><a input type href='/param/protocole/codediff'>Code d'extinction different de l'allumage</a></p>\
+                    <p><a input type href='erase'>Tout effacer</a></p>";
 
-  snprintf ( temp, 400,
+  page += htmlFooter();
 
-"<html>\
-  <head>\
-    <meta http-equiv='refresh' content='5'/>\
-    <title>ESP8266 Demo</title>\
-    <style>\
-      body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
-    </style>\
-  </head>\
-  <body>\
-    <h1>Hello from ESP8266!</h1>\
-    <a input type href=\"/on\"/ >/Allumer le projecteur/</a>\
-    <a href=\"/off\"/ >Eteindre le projecteur/</a>\
-  </body>\
-</html>"
-            
-  );
-  server.send ( 200, "text/html", temp );
+  
+  server.send ( 200, "text/html", page );
 
 }
 
@@ -133,7 +165,7 @@ void setup(){
 
     
 // --------------------------------------------------------------------------------------
-// Projecteur ON
+// Allumer
 // --------------------------------------------------------------------------------------
   server.on("/on", [](){
     
@@ -143,31 +175,101 @@ void setup(){
 
     server.send(200, "text/plain", "Projecteur allumee");
     
-    clignote(1, 200);
+    clignote(2, 200);
 
   });
 
 
 // --------------------------------------------------------------------------------------
-// Projecteur OFF
+// Eteindre
 // --------------------------------------------------------------------------------------
-  server.on("/off", [](){
+  server.on("/off1", [](){
     
     irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR), EEPROMReadlong(BITS_ADDR));
     
     Serial.println("Projecteur eteint");
     server.send(200, "text/plain", "Projecteur eteint");
-    
-    eteint();
+
+    Serial.println();
+            Serial.print("Code voulu : ");
+            Serial.println(TestCode);
+
+            Serial.print("Code obtenu : ");
+            Serial.println(EEPROMReadlong(CODE_ADDR)); 
+   
+    clignote(4, 50);
   });
-  
+
+// --------------------------------------------------------------------------------------
+// Eteindre avec confirmation
+// --------------------------------------------------------------------------------------
+  server.on("/off2", [](){
+    
+    irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR), EEPROMReadlong(BITS_ADDR));      //On envoie le code qui correspond au code de la télécommande
+    clignote(4, 50);
+    
+    delay(1500);
+    
+    irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR), EEPROMReadlong(BITS_ADDR));
+    clignote(4, 50);
+    
+    Serial.println("Projecteur eteint");
+
+    server.send(200, "text/plain", "Projecteur eteint");
+    
+    
+
+  });
+
+// --------------------------------------------------------------------------------------
+// Eteindre (2 boutons)
+// --------------------------------------------------------------------------------------
+  server.on("/off3", [](){
+    
+    irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR2), EEPROMReadlong(BITS_ADDR));
+    
+    Serial.println("Projecteur eteint");
+    server.send(200, "text/plain", "Projecteur eteint");
+
+    Serial.println();
+            Serial.print("Code voulu : ");
+            Serial.println(TestCode2);
+
+            Serial.print("Code obtenu : ");
+            Serial.println(EEPROMReadlong(CODE_ADDR2)); 
+      
+  });
   
   server.onNotFound(handleNotFound);  //Si on ne trouve pas la page
 
   server.begin();
   Serial.println("HTTP server started");
 
-  }
+// --------------------------------------------------------------------------------------
+// Deuxieme page
+// --------------------------------------------------------------------------------------
+  server.on("/param/protocole/codediff", [](){
+
+    CodeRecep=1;
+      
+          String page2;
+          page2 = htmlHeader("Recepteur");
+          page2 +="<h3>Activation du recepteur</h3>\
+                    <div id='carre'>\
+                       <p>Passez le boitier en mode reception et enregistrer le code d'extinction</p>\
+                       <p><a input type href='/'>Enregistrer</a></p></div>";
+        
+          page2 += htmlFooter();
+      
+        
+        server.send ( 200, "text/html", page2 );
+    
+
+  });
+
+
+
+}
 
 
 // --------------------------------------------------------------------------------------
@@ -234,16 +336,13 @@ void loop(void){
   server.handleClient();      //On active le serveur
   lecture=digitalRead(inter); //Lecture du switch
 
-  if(lecture==1){
+  if(lecture==1 && CodeRecep==0){
  
           if (irrecv.decode(&results)) {
 
             for(int i = 0; i<1;i++) {
+              Serial.println();
               Serial.println("Recepteur actif");
-            }
-
-            for (int i = 0; i < 512; i++) {       //Vide la mémoire de l'EEPROM
-              EEPROMWritelong(i, 0);
             }
 
             EEPROMWritelong(TYPE_ADDR, results.decode_type);   //On ecrit le type de codage dans l'EEPROM
@@ -279,5 +378,48 @@ void loop(void){
 
       irrecv.resume();  // Reçoit la prochaine valeur
     }
-  }
+  }    
+          if(lecture==1 && CodeRecep==1){
+      
+            if (irrecv.decode(&results)) {
+      
+                  for(int i = 0; i<1;i++) {
+                    Serial.println();
+                    Serial.println("Recepteur actif");
+                  }
+      
+                  EEPROMWritelong(TYPE_ADDR, results.decode_type);   //On ecrit le type de codage dans l'EEPROM
+      
+                  EEPROMWritelong(CODE_ADDR2, results.value);         //On écrit le code dans l'EEPROM
+      
+                  EEPROMWritelong(BITS_ADDR, results.bits);          //On écrit le nombre de bits dans l'EEPROM
+      
+                  TestCode2=(results.value);
+                  
+      
+                  EEPROM.commit();
+                  
+                  Serial.print("Numero du type d'encodage : ");
+                  Serial.println(results.decode_type);
+      
+                  Serial.print("Code hexadecimal : ");
+                  serialPrintUint64(results.value, 16);
+                  Serial.println();
+      
+                  Serial.print("Nombre de bits : ");
+                  Serial.println(uint64ToString(results.bits));
+                  
+      
+                  Serial.println();
+                  Serial.print("Code voulu : ");
+                  Serial.println(TestCode2);
+      
+                  Serial.print("Code obtenu : ");
+                  Serial.println(EEPROMReadlong(CODE_ADDR2)); 
+                  
+                  clignote(4, 50);                //On fait clignoter la led 4 fois avec un intervalle de 50ms
+      
+            irrecv.resume();  // Reçoit la prochaine valeur
+          }
+        }
 }
