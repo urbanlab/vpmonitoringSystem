@@ -34,8 +34,7 @@ int TestCode;
 int TestCode2;
 int CodeRecep = 0;
 int EEPROMoff;
-char* nomDNS = "erasmeVP";
-String nomduDNS;
+String nomduDNS ="erasmeVP";
 
 // --------------------------------------------------------------------------------------
 // Identifiant de connexion au wifi
@@ -54,6 +53,10 @@ IRsend irsend(IR_LED);
 
 decode_results results;
 
+String humanReadableIp(IPAddress ip) {
+  return String(ip[0]) + String(".") + String(ip[1]) + String(".") + String(ip[2]) + String(".") + String(ip[3]);
+}
+
 // --------------------------------------------------------------------------------------
 // Affichage de la page web de base
 // --------------------------------------------------------------------------------------
@@ -63,7 +66,7 @@ String htmlHeader(String title) {
             <title>Erasme VP</title>\
             <style>\
               body { font-family: Arial, Helvetica, Sans-Serif; Color: #4CAF50;}\
-               #carre  {box-sizing: content-box; width: auto;height: auto; padding: 15px; border: 2px solid #4CAF50};\
+               #carre  {box-sizing: content-box; width: auto;height: auto; padding: 10px; border: 2px solid #4CAF50};\
             </style>\
           </head>\
           <body>\
@@ -312,7 +315,13 @@ void handleRoot() {
   for (uint8_t i = 0; i < server.args(); i++) {
     Serial.println( " " + server.argName(i) + ": " + server.arg(i));
   }
-  page = htmlHeader("Home");
+
+  String messages="Nom du DNS : ";
+         messages+=nomduDNS;
+         messages+=" / Adresse IP : ";
+         messages+=humanReadableIp(WiFi.localIP());
+         
+  page = htmlHeader(messages);
   page +=
     "<h3>Allumage et extinction</h3>\
             <div id='carre'>\
