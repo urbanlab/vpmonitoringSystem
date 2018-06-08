@@ -11,3 +11,10 @@ Liste des composant :
 Branchements : 
 
 ![alt tag](https://user-images.githubusercontent.com/39366401/41089124-5f3587da-6a41-11e8-883c-0e6aca553fbe.jpg)
+
+Signification des clignotements :
+- Allumer : Clignote 2 fois avec 200ms de délai
+- Éteindre : Clignote 4 fois avec 100ms de délai
+- Enregistrer mode Éteindre dans EEPROM : Clignote 3 fois avec 150ms de délai
+- Effacer : Clignote 10 fois avec 50ms de délai
+- Enregistrer Code : Clignote 4 fois avec 50ms de délai
