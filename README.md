@@ -7,7 +7,7 @@ Hardware :
 
 ![alt tag](https://user-images.githubusercontent.com/39366401/40787534-2884d036-64ee-11e8-9586-2d007c10d1d0.jpg)
 
-More information [here](https://github.com/AGoubs/Projet-Stage/edit/master/Doc/README.md)
+More information [here](https://github.com/AGoubs/Projet-Stage/blob/master/Doc/README.md)
 
 Description : 
 
@@ -29,7 +29,7 @@ Hardware :
 
 ![alt tag](https://user-images.githubusercontent.com/39366401/40787534-2884d036-64ee-11e8-9586-2d007c10d1d0.jpg)
 
-Plus d'information [ici](https://github.com/AGoubs/Projet-Stage/edit/master/Doc/README.md)
+Plus d'information [ici](https://github.com/AGoubs/Projet-Stage/blob/master/Doc/README.md)
 
 Description:
 
