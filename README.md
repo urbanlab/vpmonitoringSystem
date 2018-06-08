@@ -7,13 +7,7 @@ Hardware :
 
 ![alt tag](https://user-images.githubusercontent.com/39366401/40787534-2884d036-64ee-11e8-9586-2d007c10d1d0.jpg)
 
-List of component :
-- IR LED OPE5685 850nm
-- LED
-- IR Reciever TSOP32238 38KHZ
-- Adafruit Feather HUZZAH esp8266
-- Grove Protoshield
-- Switch
+More information [here](https://github.com/AGoubs/Projet-Stage/edit/master/Doc/README.md)
 
 Description : 
 
@@ -35,13 +29,7 @@ Hardware :
 
 ![alt tag](https://user-images.githubusercontent.com/39366401/40787534-2884d036-64ee-11e8-9586-2d007c10d1d0.jpg)
 
-Liste des composant :
-- LED Infrarouge OPE5685 850nm
-- LED
-- Recepteur Infrarouge TSOP32238 38KHZ
-- Adafruit Feather HUZZAH esp8266
-- Grove Protoshield
-- Interrupteur
+Plus d'information [ici](https://github.com/AGoubs/Projet-Stage/edit/master/Doc/README.md)
 
 Description:
 
