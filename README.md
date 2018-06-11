@@ -14,8 +14,15 @@ Description :
 This box allows you to save a code when the switch is activated (a remote control button code for example). When a code is detected, the              led flashes and the code is stored in the read-only memory of the card.
 When the switch is desactivated, you can activate the box with internet and the bix will return the saved code. (To turn your TV on...)
 
+The basic application of this box is to turn on projectors via a web interface:
 
+![alt tag](https://user-images.githubusercontent.com/39366401/41224436-c4ecb5de-6d6c-11e8-8291-46c0be01eec0.png)
 
+On this interface you can:
+- Turn ON or OFF video projector
+- Change DNS name
+- Configure if the projector is turned on by pressing the button 1 or 2 times or a second OFF button
+- Erase memory
 
 /***********************************************************************************************************************************/
 # Télécommande universelle
