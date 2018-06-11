@@ -15,6 +15,8 @@ This box allows you to save a code when the switch is activated (a remote contro
 When the switch is desactivated, you can activate the box with internet and the bix will return the saved code. (To turn your TV on...)
 
 
+
+
 /***********************************************************************************************************************************/
 # Télécommande universelle
 
@@ -35,3 +37,13 @@ Lorsqu'un code est détécté, la led clignote et le code est enregistré dans l
 
 La deuxième application de ce boitier est qu'a l'activation sur internet, le boitier peut renvoyer le code enregistré (pour allumer un vidéoprojecteur ou une télé par exemple).
 
+
+L'application de base de ce boîtier est d'allumer des projecteurs via une interface web :
+
+![alt tag](https://user-images.githubusercontent.com/39366401/41224436-c4ecb5de-6d6c-11e8-8291-46c0be01eec0.png)
+
+Sur cette interface vous pouvez :
+- Allumer ou éteindre un projecteur
+- Changer le nom du DNS
+- Configurer si par défaut le projecteur s'allume en appuyant 1 ou 2 fois sur le bouton ou un deuxième bouton OFF
+- Effacer la mémoire
