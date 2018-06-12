@@ -16,7 +16,7 @@ When the switch is desactivated, you can activate the box with internet and the 
 
 The basic application of this box is to turn on projectors via a web interface:
 
-![alt tag](https://user-images.githubusercontent.com/39366401/41224436-c4ecb5de-6d6c-11e8-8291-46c0be01eec0.png)
+![alt tag](https://user-images.githubusercontent.com/39366401/41294090-70e8a2ae-6e57-11e8-9c2b-2744ffa6bab3.png)
 
 On this interface you can:
 - Turn ON or OFF video projector
@@ -47,7 +47,7 @@ La deuxième application de ce boitier est qu'a l'activation sur internet, le bo
 
 L'application de base de ce boîtier est d'allumer des projecteurs via une interface web :
 
-![alt tag](https://user-images.githubusercontent.com/39366401/41224436-c4ecb5de-6d6c-11e8-8291-46c0be01eec0.png)
+![alt tag](https://user-images.githubusercontent.com/39366401/41294090-70e8a2ae-6e57-11e8-9c2b-2744ffa6bab3.png)
 
 Sur cette interface vous pouvez :
 - Allumer ou éteindre un projecteur
