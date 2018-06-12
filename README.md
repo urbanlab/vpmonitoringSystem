@@ -50,7 +50,16 @@ L'application de base de ce boîtier est d'allumer des projecteurs via une inter
 ![alt tag](https://user-images.githubusercontent.com/39366401/41294090-70e8a2ae-6e57-11e8-9c2b-2744ffa6bab3.png)
 
 Sur cette interface vous pouvez :
-- Allumer ou éteindre un projecteur
-- Changer le nom du DNS
-- Configurer si par défaut le projecteur s'allume en appuyant 1 ou 2 fois sur le bouton ou un deuxième bouton OFF
-- Effacer la mémoire
+- Allumer : Envoie le code d'allumage du projecteur
+- Eteindre : Envoie le code d'allumage du projecteur (pour l'éteindre)
+- Eteindre avec confirmation : Envoie le code d'allumage du projecteur deux fois. Certains vidéoprojecteurs nécessite une confirmation     pour éteindre le projecteur.
+
+- Allumer : Envoie le code d'allumage du projecteur
+- Eteindre : Envoie le code d'extinction du projecteur (certains projecteurs nécessite deux boutons pour allumer/éteindre le vp)
+- Eteindre avec l'EEPROM : Envoie le code enregistré dans la mémoire
+
+- Nom du DNS : Permet de changer le nom du DNS
+- Eteindre : Enregistre dans la mémoire que par défaut, ce projecteur ne nécessite qu'un code pour éteindre et allumer le vp
+- Eteindre avec confirmation : Enregistre dans la mémoire que par défaut, ce projecteur nécessite deux code pour éteindre et allumer le   vp
+- Code d'extinction différent de l'allumage : ermet d'enregistrer le deuxième code pour les vp nécessitant deux boutons
+- Tout effacer : Permet d'effacer la mémoire
