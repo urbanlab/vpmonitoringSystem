@@ -61,5 +61,6 @@ Sur cette interface vous pouvez :
 - Nom du DNS : Permet de changer le nom du DNS
 - Eteindre : Enregistre dans la mémoire que par défaut, ce projecteur ne nécessite qu'un code pour éteindre et allumer le vp
 - Eteindre avec confirmation : Enregistre dans la mémoire que par défaut, ce projecteur nécessite deux code pour éteindre et allumer le   vp
+
 - Code d'extinction différent de l'allumage : ermet d'enregistrer le deuxième code pour les vp nécessitant deux boutons
 - Tout effacer : Permet d'effacer la mémoire
