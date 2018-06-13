@@ -82,17 +82,17 @@ void clignote(int a, int b) {
 // On affiche le détail du code enregistrer par le récepteur
 // --------------------------------------------------------------------------------------
 void afficherDetails() {
-      Serial.print("Numero du type d'encodage : ");
-      Serial.println(results.decode_type);
+  Serial.print("Numero du type d'encodage : ");
+  Serial.println(results.decode_type);
 
-      Serial.print("Code hexadecimal : ");
-      serialPrintUint64(results.value, 16);
-      Serial.println();
+  Serial.print("Code hexadecimal : ");
+  serialPrintUint64(results.value, 16);
+  Serial.println();
 
-      Serial.print("Nombre de bits : ");
-      Serial.println(uint64ToString(results.bits));
+  Serial.print("Nombre de bits : ");
+  Serial.println(uint64ToString(results.bits));
 
-      clignote(4, 50);   
+  clignote(4, 50);
 }
 
 // --------------------------------------------------------------------------------------
@@ -101,11 +101,8 @@ void afficherDetails() {
 String htmlHeader(String title) {
   return "<html>\
           <head>\
-            <title>Erasme VP</title>\
-            <style>\
-              body { font-family: Arial, Helvetica, Sans-Serif; Color: #4CAF50;}\
-               #carre  {box-sizing: content-box; width: auto;height: auto; padding: 10px; border: 2px solid #4CAF50};\
-            </style>\
+            <title>" + nomduDNS + "</title>\
+            "+getStyle()+"\
           </head>\
           <body>\
           <h1>" + title + "</h1>";
@@ -115,6 +112,104 @@ String htmlFooter() {
   return "</body>\
         </html>";
 }
+
+
+// --------------------------------------------------------------
+// Index html
+// --------------------------------------------------------------
+String GetIndex() {
+
+  CodeRecep = 0;
+  String page;
+
+  String messages = "Nom du DNS : ";
+  messages += nomduDNS;
+  messages += " / Adresse IP : ";
+  messages += humanReadableIp(WiFi.localIP());
+
+  page = htmlHeader(messages);
+  page += "<h3>Allumage et extinction</h3>\
+          <div class='carre'>\
+            <table>\
+             <tr><h4>1.Codes identiques</h4>\
+                  <FORM action='/on'>\
+                      <th><INPUT TYPE='submit' class='button' VALUE='Allumer'></th>\
+                  </FORM>\
+                  <FORM action='/off1'>\
+                       <th><INPUT TYPE='submit' class='button' VALUE='Eteindre'></th>\
+                  </FORM>\
+                  <FORM action='/off2'>\
+                       <th><INPUT TYPE='submit' class='button' VALUE='Eteindre avec confirmation'></th>\
+                  </FORM></tr></table>\
+              <table><tr><h4>2.Codes differents</h4>\
+                  <FORM action='/on'>\
+                        <th><p><INPUT TYPE='submit' class='button' VALUE='Allumer'></th>\
+                  </FORM>\
+                  <FORM action='/off3'>\
+                         <th><INPUT TYPE='submit' class='button' VALUE='Eteindre'></th>\
+                  </FORM>\
+                  <FORM action='/off'>\
+                         <th><INPUT TYPE='submit' class='button' VALUE=\"Eteindre avec l'EEPROM  \"></th>\
+                  </FORM></tr>\
+                  </table>\
+            </div>\
+          <h3>Parametrage</h3>\
+            <div class='carre'>\
+              <h4>Nom du DNS</h4>\
+               <FORM action='/record'>\
+                  <p><input type='text' NAME='dnsName' VALUE=" + nomduDNS + ">.local</a>\
+                  <INPUT TYPE='submit' class='button' VALUE='Envoyer'></p>\
+                </FORM>\
+              <h4>Protocole d'extinction</h4>\
+                  <FORM action='/param/protocole/extinction'>\
+                         <p><INPUT TYPE='submit' class='button' VALUE='Eteindre'></p>\
+                  </FORM>\
+                  <FORM action='/param/protocole/extinction/confirmation'>\
+                         <p><INPUT TYPE='submit' class='button' VALUE='Eteindre avec confirmation'></p>\
+                  </FORM>\
+                  <FORM action='/param/protocole/codediff'>\
+                         <p><INPUT TYPE='submit' class='button' VALUE=\"Code d'extinction different de l'allumage\"></p>\
+                  </FORM>\
+                  <FORM action='/erase'>\
+                         <p><INPUT TYPE='submit' class='button' VALUE='Tout effacer'></p>\
+                  </FORM>\
+                  </div>";
+
+  page += htmlFooter();
+
+  return page;
+}
+
+// --------------------------------------------------------------
+// CSS
+// --------------------------------------------------------------
+String getStyle() {
+            return  "<style>\
+                body{font-family: Arial, sans-serif; font-size: 16px; height: 100%; margin: 0; padding: 0; color: #000; background: hsl(227, 10%, 10%);; color:#fff; margin-left: 1%; margin-top:5%;}\
+                h1 {text-align: center; margin-top: -4%;}\
+                .button {background: none; border: 2px solid #4CAF50; color: white; padding: 15px 32px; text-align: center; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; color:#4CAF50; transition-duration: 0.4s; transition-duration: 0.4s; cursor: pointer;border-radius: 3px;}\
+                .button:hover {background-color: #4CAF50; color: white;}\
+                .carre {width: 75%; padding: 10px; border: 2px solid #4CAF50; margin: 0;border-radius: 3px;}\
+            </style>";
+}
+
+// --------------------------------------------------------------
+// Redirection client
+// --------------------------------------------------------------
+String clientRedirect() {
+
+  return "<html>\
+<head>\
+  "+getStyle()+"\
+  <meta http-equiv='refresh' content='0; URL=http://" + nomduDNS + ".local/\' />\
+</head>\
+<body>\
+<h1>Redirection en cours</h1>\
+</body>\
+</html>";
+
+}
+
 
 // --------------------------------------------------------------
 // Config du DNS
@@ -149,12 +244,15 @@ void handleRecord() {
   }
   write_StringEE(DNS_ADDR, recordDNS);    //On écrit en String dans l'EEPROM
 
-  // Redirection
-  handleRoot();
-
   nomduDNS = (read_StringEE(DNS_ADDR, (recordDNS.length() + 1))); //On met la valeur écrite dans l'EEPROM dans une variable
+  Serial.println(strToChar(nomduDNS));
 
   configDNS();      //On actualise le DNS
+
+  server.send ( 310, "text/html", clientRedirect());
+
+  server.client().stop();
+
 
 }
 
@@ -234,7 +332,7 @@ void handleOFF3() {
 
   sendCode(CODE_ADDR2);
   clignote(4, 100);
-  
+
   handleRoot();
 }
 
@@ -253,7 +351,10 @@ void handleExtinction() {
 
   String page2;
   page2 = htmlHeader("Code d'extinction sans confirmation");
-  page2 += "<a input type href='/'>Retour</a>";
+  page2 += "<p>Code d'extinction par defaut enregistrer</p>\
+            <FORM action='/'>\
+             <INPUT TYPE='submit' class='button' VALUE='Retour'></th>\
+             </FORM>";
   page2 += htmlFooter();
 
   server.send ( 200, "text/html", page2 );
@@ -274,7 +375,10 @@ void handleExtinctionConf() {
 
   String page2;
   page2 = htmlHeader("Code d'extinction avec confirmation");
-  page2 += "<a input type href='/'>Retour</a>";
+  page2 += "<p>Code d'extinction par defaut enregistre</p>\
+              <FORM action='/'>\
+             <INPUT TYPE='submit' class='button' VALUE='Retour'></th>\
+             </FORM>";
   page2 += htmlFooter();
 
   server.send ( 200, "text/html", page2 );
@@ -294,7 +398,9 @@ void handleCodediff() {
   page2 += "<h3>Activation du recepteur</h3>\
                     <div id='carre'>\
                        <p>Passez le boitier en mode reception et enregistrer le code d'extinction</p>\
-                       <p><a input type href='/'>Enregistrer</a></p></div>";
+                       <FORM action='/'>\
+                       <th><INPUT TYPE='submit' class='button' VALUE='Enregistrer'></th>\
+                  </FORM></div>";
 
   page2 += htmlFooter();
 
@@ -321,44 +427,7 @@ void handleErase() {
 // --------------------------------------------------------------------------------------
 void handleRoot() {
 
-  CodeRecep = 0;
-  String page;
-
-  String messages = "Nom du DNS : ";
-  messages += nomduDNS;
-  messages += " / Adresse IP : ";
-  messages += humanReadableIp(WiFi.localIP());
-
-  page = htmlHeader(messages);
-  page +=
-    "<h3>Allumage et extinction</h3>\
-            <div id='carre'>\
-                  <h4>1.Codes identiques</h4>\
-               <p><a input type href='on' >Allumer le projecteur</a>\
-                  <a input type href='off1'>Eteindre le projecteur</a>\
-                  <a input type href='off2'>Eteindre avec confirmation</a></p>\
-                  <h4>2.Codes differents</h4>\
-               <p><a input type href='on'>Allumer le projecteur</a>\
-                  <a input type href='off3'>Eteindre le projecteur</a>\
-                  <a input type href='off'>Eteindre avec l'EEPROM</a></p>\
-            </div>\
-          <h3>Parametrage</h3>\
-            <div id='carre'>\
-              <h4>Nom du DNS</h4>\
-               <FORM action='/record'>\
-                  <p><input type='text' NAME='dnsName'>.local</a></p>\
-                  <INPUT TYPE='submit' VALUE='Envoyer'>\
-                </FORM>\
-              <h4>Protocole d'extinction</h4>\
-                    <p><a input type href='/param/protocole/extinction'>Eteindre</a></p>\
-                    <p><a input type href='/param/protocole/extinction/confirmation'>Eteindre avec confirmation</a></p>\
-                    <p><a input type href='/param/protocole/codediff'>Code d'extinction different de l'allumage</a></p>\
-                    <p><a input type href='erase'>Tout effacer</a></p>";
-
-  page += htmlFooter();
-
-
-  server.send ( 200, "text/html", page );
+  server.send ( 200, "text/html", GetIndex());
 
 }
 
@@ -577,7 +646,7 @@ void loop(void) {
       EEPROM.commit();
 
       afficherDetails();
-      
+
 
       irrecv.resume();  // Reçoit la prochaine valeur
     }
@@ -597,4 +666,3 @@ void loop(void) {
     }
   }
 }
-
