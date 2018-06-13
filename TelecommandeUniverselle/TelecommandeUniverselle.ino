@@ -149,7 +149,7 @@ String GetIndex() {
                          <th><INPUT TYPE='submit' class='button' VALUE='Eteindre'></th>\
                   </FORM>\
                   <FORM action='/off'>\
-                         <th><INPUT TYPE='submit' class='button' VALUE=\"Eteindre avec l'EEPROM  \"></th>\
+                         <th><INPUT TYPE='submit' class='button' VALUE=\"Eteindre en fonction du protocole choisi\"></th>\
                   </FORM></tr>\
                   </table>\
             </div>\
@@ -161,15 +161,9 @@ String GetIndex() {
                   <INPUT TYPE='submit' class='button' VALUE='Envoyer'></p>\
                 </FORM>\
               <h4>Protocole d'extinction</h4>\
-                  <FORM action='/param/protocole/extinction'>\
-                         <p><INPUT TYPE='submit' class='button' VALUE='Eteindre'></p>\
-                  </FORM>\
-                  <FORM action='/param/protocole/extinction/confirmation'>\
-                         <p><INPUT TYPE='submit' class='button' VALUE='Eteindre avec confirmation'></p>\
-                  </FORM>\
-                  <FORM action='/param/protocole/codediff'>\
-                         <p><INPUT TYPE='submit' class='button' VALUE=\"Code d'extinction different de l'allumage\"></p>\
-                  </FORM>\
+                "+getAffichage()+"\
+                  "+getAffichage2()+"\
+                  "+getAffichage3()+"\
                   <FORM action='/erase'>\
                          <p><INPUT TYPE='submit' class='button' VALUE='Tout effacer'></p>\
                   </FORM>\
@@ -209,6 +203,54 @@ String clientRedirect() {
 </html>";
 
 }
+
+// --------------------------------------------------------------
+// Affichage config
+// --------------------------------------------------------------
+String getAffichage(){
+  if (EEPROMoff==1)   {
+    return "<FORM action='/param/protocole/extinction'>\
+              <p><INPUT TYPE='submit' class='button' VALUE='Eteindre    <<'></p>\
+            </FORM>";
+   }
+  else    {
+    return "<FORM action='/param/protocole/extinction'>\
+              <p><INPUT TYPE='submit' class='button' VALUE='Eteindre'></p>\
+            </FORM>";
+    }
+}
+// --------------------------------------------------------------
+// Affichage config
+// --------------------------------------------------------------
+String getAffichage2(){    
+    if (EEPROMoff==2) {
+      return "<FORM action='/param/protocole/extinction/confirmation'>\
+          <p><INPUT TYPE='submit' class='button' VALUE='Eteindre avec confirmation    <<'></p>\
+      </FORM>";
+    }
+    else {
+      return "<FORM action='/param/protocole/extinction/confirmation'>\
+          <p><INPUT TYPE='submit' class='button' VALUE='Eteindre avec confirmation'></p>\
+      </FORM>";
+    }
+}
+// --------------------------------------------------------------
+// Affichage config
+// --------------------------------------------------------------
+String getAffichage3(){
+    if (EEPROMoff==3) {
+      return "<FORM action='/param/protocole/codediff'>\
+             <p><INPUT TYPE='submit' class='button' VALUE=\"Code d'extinction different de l'allumage    <<\"></p>\
+      </FORM>";
+    }
+    else {
+      return "<FORM action='/param/protocole/codediff'>\
+             <p><INPUT TYPE='submit' class='button' VALUE=\"Code d'extinction different de l'allumage\"></p>\
+      </FORM>";
+    }
+}
+
+
 
 
 // --------------------------------------------------------------
