@@ -16,13 +16,16 @@ When the switch is desactivated, you can activate the box with internet and the 
 
 The basic application of this box is to turn on projectors via a web interface:
 
-![alt tag](https://user-images.githubusercontent.com/39366401/41294090-70e8a2ae-6e57-11e8-9c2b-2744ffa6bab3.png)
+![alt tag](https://user-images.githubusercontent.com/39366401/41417965-0b011036-6fef-11e8-9a5a-fc6e6193c0bf.png)
 
 On this interface you can:
-- Turn ON or OFF video projector
-- Change DNS name
-- Configure if the projector is turned on by pressing the button 1 or 2 times or a second OFF button
-- Erase memory
+- **Allumer :** Send the code to turn on the videoprojector.
+- **Eteindre :** Send the code to turn off the videoprojector.
+- **Nom du DNS :** Allows to change the DNS name.
+- **ON :** Allows to save the code to turn on the videoprojector.
+- **OFF :** Allows to save the code to turn off the videoprojector.
+- **Protocole d'extinction :** By default, some videoprojector needs to send the code once to turn it off but you can also said if you need to send it twice.
+- **Réinitialiser :** Reset all.
 
 /***********************************************************************************************************************************/
 # Télécommande universelle
@@ -53,7 +56,7 @@ Sur cette interface vous pouvez :
 - **Allumer :** Envoie le code d'allumage du projecteur.
 - **Eteindre :** Envoie le code d'extinction du projecteur (défini plus bas).
 - **Nom du DNS :** Permet de changer le nom du DNS.
-- **ON :** Permet d'enregistrer le code d'allumage du vidéoprojecteur (N'enregistrer qu'un seul code si celui-ci permet 'allumage et l'extinction du vidéoprojecteur).
+- **ON :** Permet d'enregistrer le code d'allumage du vidéoprojecteur (N'enregistrer qu'un seul code si celui-ci permet l'allumage et l'extinction du vidéoprojecteur).
 - **OFF :** Enregistre le code d'extinction du vidéoprojecteur.
 - **Protocole d'extinction :** Définit si par défaut, le projecteur nécessite d'envoyer le code une ou deux fois pour s'éteindre.
 - **Réinitialiser :** Réinitialise tous les paramètes.
