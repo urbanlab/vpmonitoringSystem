@@ -47,20 +47,13 @@ La deuxième application de ce boitier est qu'a l'activation sur internet, le bo
 
 L'application de base de ce boîtier est d'allumer des projecteurs via une interface web :
 
-![alt tag](https://user-images.githubusercontent.com/39366401/41294090-70e8a2ae-6e57-11e8-9c2b-2744ffa6bab3.png)
+![alt tag](https://user-images.githubusercontent.com/39366401/41417965-0b011036-6fef-11e8-9a5a-fc6e6193c0bf.png)
 
 Sur cette interface vous pouvez :
 - **Allumer :** Envoie le code d'allumage du projecteur
-- **Eteindre :** Envoie le code d'allumage du projecteur (pour l'éteindre)
-- **Eteindre avec confirmation :** Envoie le code d'allumage du projecteur deux fois. Certains vidéoprojecteurs nécessite une confirmation     pour éteindre le projecteur.
-
-- **Allumer :** Envoie le code d'allumage du projecteur
-- **Eteindre :** Envoie le code d'extinction du projecteur (certains projecteurs nécessite deux boutons pour allumer/éteindre le vp)
-- **Eteindre avec l'EEPROM :** Envoie le code enregistré dans la mémoire
-
-- **Nom du DNS :** Permet de changer le nom du DNS
-- **Eteindre **: Enregistre dans la mémoire que par défaut, ce projecteur ne nécessite qu'un code pour éteindre et allumer le vp
-- **Eteindre avec confirmation :** Enregistre dans la mémoire que par défaut, ce projecteur nécessite deux code pour éteindre et allumer le   vp
-
-- **Code d'extinction différent de l'allumage :** Permet d'enregistrer le deuxième code pour les vp nécessitant deux boutons
-- **Tout effacer :** Permet d'effacer la mémoire
+- **Eteindre :** Envoie le code d'extinction du projecteur (défini plus bas)
+-**Nom du DNS :** Permet de changer le nom du DNS
+-**ON :** Permet d'enregistrer le code d'allumage du vidéoprojecteur (N'enregistrer qu'un seul code si celui-ci permet 'allumage et l'extinction du vidéoprojecteur)
+-**OFF :** Enregistre le code d'extinction du vidéoprojecteur
+-**Protocole d'extinction :** Définit si par défaut, le projecteur nécessite d'envoyer le code une ou deux fois pour s'éteindre
+- **Réinitialiser :** Réinitialise tous les paramètes
