@@ -50,10 +50,10 @@ L'application de base de ce boîtier est d'allumer des projecteurs via une inter
 ![alt tag](https://user-images.githubusercontent.com/39366401/41417965-0b011036-6fef-11e8-9a5a-fc6e6193c0bf.png)
 
 Sur cette interface vous pouvez :
-- **Allumer :** Envoie le code d'allumage du projecteur
-- **Eteindre :** Envoie le code d'extinction du projecteur (défini plus bas)
--**Nom du DNS :** Permet de changer le nom du DNS
--**ON :** Permet d'enregistrer le code d'allumage du vidéoprojecteur (N'enregistrer qu'un seul code si celui-ci permet 'allumage et l'extinction du vidéoprojecteur)
--**OFF :** Enregistre le code d'extinction du vidéoprojecteur
--**Protocole d'extinction :** Définit si par défaut, le projecteur nécessite d'envoyer le code une ou deux fois pour s'éteindre
-- **Réinitialiser :** Réinitialise tous les paramètes
+- **Allumer :** Envoie le code d'allumage du projecteur.
+- **Eteindre :** Envoie le code d'extinction du projecteur (défini plus bas).
+- **Nom du DNS :** Permet de changer le nom du DNS.
+- **ON :** Permet d'enregistrer le code d'allumage du vidéoprojecteur (N'enregistrer qu'un seul code si celui-ci permet 'allumage et l'extinction du vidéoprojecteur).
+- **OFF :** Enregistre le code d'extinction du vidéoprojecteur.
+- **Protocole d'extinction :** Définit si par défaut, le projecteur nécessite d'envoyer le code une ou deux fois pour s'éteindre.
+- **Réinitialiser :** Réinitialise tous les paramètes.
