@@ -24,16 +24,18 @@
 #define BITS_ADDR 16
 #define OFF_ADDR 128
 #define DNS_ADDR 160
+#define DUREE_ADDR 200
 
 const int inter = 15;       //Interrupteur sur la PIN 15
 uint16_t RECV_PIN = 14;     //Recepteur sur la PIN 14
 const int IR_LED = 13;      //LED infrarouge sur la PIN 13
 const int A_LED = 12;       //LED sur la PIN 12
 int lecture;                //Variable du switch
-int CodeRecep = 0;             //Variable du deuxième bouton
+int CodeRecep;             //Variable du deuxième bouton
 int EEPROMoff;                 //Variable du deuxième bouton dans l'EEPROM
 String nomduDNS = "erasmeVP";  //Variable du nom du DNS (de base "erasmevp")
-
+int delai=2000;
+int delais;
 // --------------------------------------------------------------------------------------
 // Identifiant de connexion au wifi
 // --------------------------------------------------------------------------------------
@@ -101,6 +103,7 @@ void afficherDetails() {
 String htmlHeader(String title) {
   return "<html>\
           <head>\
+          <meta charset='utf-8' />\
             <title>" + nomduDNS + "</title>\
             "+getStyle()+"\
           </head>\
@@ -118,8 +121,7 @@ String htmlFooter() {
 // Index html
 // --------------------------------------------------------------
 String GetIndex() {
-
-  CodeRecep = 0;
+  CodeRecep=0;
   String page;
 
   String messages = "Nom du DNS : ";
@@ -131,27 +133,13 @@ String GetIndex() {
   page += "<h3>Allumage et extinction</h3>\
           <div class='carre'>\
             <table>\
-             <tr><h4>1.Codes identiques</h4>\
+             <tr><h4>Code d'allumage</h4>\
                   <FORM action='/on'>\
                       <th><INPUT TYPE='submit' class='button' VALUE='Allumer'></th>\
                   </FORM>\
-                  <FORM action='/off1'>\
-                       <th><INPUT TYPE='submit' class='button' VALUE='Eteindre'></th>\
-                  </FORM>\
-                  <FORM action='/off2'>\
-                       <th><INPUT TYPE='submit' class='button' VALUE='Eteindre avec confirmation'></th>\
-                  </FORM></tr></table>\
-              <table><tr><h4>2.Codes differents</h4>\
-                  <FORM action='/on'>\
-                        <th><p><INPUT TYPE='submit' class='button' VALUE='Allumer'></th>\
-                  </FORM>\
-                  <FORM action='/off3'>\
-                         <th><INPUT TYPE='submit' class='button' VALUE='Eteindre'></th>\
-                  </FORM>\
                   <FORM action='/off'>\
-                         <th><INPUT TYPE='submit' class='button' VALUE=\"Eteindre en fonction du protocole choisi\"></th>\
-                  </FORM></tr>\
-                  </table>\
+                       <th><INPUT TYPE='submit' class='button' VALUE='Eteindre'></th>\
+                  </FORM><tr/></table>\
             </div>\
           <h3>Parametrage</h3>\
             <div class='carre'>\
@@ -160,14 +148,25 @@ String GetIndex() {
                   <p><input type='text' NAME='dnsName' VALUE=" + nomduDNS + ">.local</a>\
                   <INPUT TYPE='submit' class='button' VALUE='Envoyer'></p>\
                 </FORM>\
+                <table>\
+              <tr><h4>Enregistrement du code</h4></tr>\
+               <FORM action='/param/protocole/codeON'>\
+                        <th><INPUT TYPE='submit' class='button' VALUE=' ON '></th>\
+                  </FORM>\
+                  <FORM action='/param/protocole/codeOFF'>\
+                         <th><INPUT TYPE='submit' class='button' VALUE='OFF'></th>\
+                 </FORM>\
+            </table>\
               <h4>Protocole d'extinction</h4>\
                 "+getAffichage()+"\
-                  "+getAffichage2()+"\
-                  "+getAffichage3()+"\
+                "+getAffichage2()+"\
+                </div>\
+              <h3>Réinitialisation</h3>\
+              <div class='carre'>\
                   <FORM action='/erase'>\
-                         <p><INPUT TYPE='submit' class='button' VALUE='Tout effacer'></p>\
+                     <INPUT TYPE='submit' class='button' id='Reinitialiser' onclick=\"return confirm('Effacer tous les parametres ?')\" VALUE='Réinitialiser'>\
                   </FORM>\
-                  </div>";
+            </div>";
 
   page += htmlFooter();
 
@@ -183,7 +182,9 @@ String getStyle() {
                 h1 {text-align: center; margin-top: -4%;}\
                 .button {background: none; border: 2px solid #4CAF50; color: white; padding: 15px 32px; text-align: center; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; color:#4CAF50; transition-duration: 0.4s; transition-duration: 0.4s; cursor: pointer;border-radius: 3px;}\
                 .button:hover {background-color: #4CAF50; color: white;}\
-                .carre {width: 75%; padding: 10px; border: 2px solid #4CAF50; margin: 0;border-radius: 3px;}\
+                .carre {min-height: 100px; width: 75%; padding: 10px; border: 2px solid #4CAF50; margin: 0;border-radius: 3px;}\
+                .disabled {opacity: 0.7; background-color: #4CAF50; color: #ffffff;}\
+                #Reinitialiser {padding: 20px 80px; margin-left: 75%; margin-top: 2%}\
             </style>";
 }
 
@@ -210,12 +211,12 @@ String clientRedirect() {
 String getAffichage(){
   if (EEPROMoff==1)   {
     return "<FORM action='/param/protocole/extinction'>\
-              <p><INPUT TYPE='submit' class='button' VALUE='Eteindre    <<'></p>\
+              <p><INPUT TYPE='submit' class='button disabled' VALUE=\"Envoyer le code d'extinction une fois  \"></p>\
             </FORM>";
    }
   else    {
     return "<FORM action='/param/protocole/extinction'>\
-              <p><INPUT TYPE='submit' class='button' VALUE='Eteindre'></p>\
+              <p><INPUT TYPE='submit' class='button' VALUE=\"Envoyer le code d'extinction une fois \"></p>\
             </FORM>";
     }
 }
@@ -225,33 +226,15 @@ String getAffichage(){
 String getAffichage2(){    
     if (EEPROMoff==2) {
       return "<FORM action='/param/protocole/extinction/confirmation'>\
-          <p><INPUT TYPE='submit' class='button' VALUE='Eteindre avec confirmation    <<'></p>\
+          <p><INPUT TYPE='submit' class='button disabled' VALUE=\"Envoyer le code d'extinction deux fois\">   Délai choisi : "+ afficherDelai() +"</p>\
       </FORM>";
     }
     else {
       return "<FORM action='/param/protocole/extinction/confirmation'>\
-          <p><INPUT TYPE='submit' class='button' VALUE='Eteindre avec confirmation'></p>\
+          <p><INPUT TYPE='submit' class='button' VALUE=\"Envoyer le code d'extinction deux fois\"></p>\
       </FORM>";
     }
 }
-// --------------------------------------------------------------
-// Affichage config
-// --------------------------------------------------------------
-String getAffichage3(){
-    if (EEPROMoff==3) {
-      return "<FORM action='/param/protocole/codediff'>\
-             <p><INPUT TYPE='submit' class='button' VALUE=\"Code d'extinction different de l'allumage    <<\"></p>\
-      </FORM>";
-    }
-    else {
-      return "<FORM action='/param/protocole/codediff'>\
-             <p><INPUT TYPE='submit' class='button' VALUE=\"Code d'extinction different de l'allumage\"></p>\
-      </FORM>";
-    }
-}
-
-
-
 
 // --------------------------------------------------------------
 // Config du DNS
@@ -260,6 +243,28 @@ void configDNS() {
   if (MDNS.begin(strToChar(nomduDNS))) {             //Définition du DNS
     Serial.println("MDNS responder started");
   }
+}
+
+// --------------------------------------------------------------
+// Affichage du délai
+// --------------------------------------------------------------
+String afficherDelai() {
+  String printDelai="";
+
+  if (delais == 1000){
+    printDelai="1 seconde";
+  }
+  else if (delais == 2000){
+    printDelai="2 secondes";
+  }
+  else if (delais == 3000){
+    printDelai="3 secondes";
+  }
+  else if (delais == 4000){
+    printDelai="4 secondes";
+  }
+
+  return printDelai;
 }
 
 // --------------------------------------------------------------
@@ -281,6 +286,7 @@ void handleRecord() {
   for (uint8_t i = 0; i < server.args(); i++) {
     if (server.argName(i) == "dnsName") {
       recordDNS = server.arg(i);
+      Serial.println(recordDNS);
       break;
     }
   }
@@ -307,6 +313,10 @@ void handleON() {
 
   clignote(2, 200);
 
+  Serial.println(EEPROMReadlong(TYPE_ADDR));
+  Serial.println(EEPROMReadlong(CODE_ADDR));
+  Serial.println(EEPROMReadlong(BITS_ADDR));
+
   handleRoot();
 }
 
@@ -325,7 +335,7 @@ void handleOFF() {
     sendCode(CODE_ADDR);                    //On envoie deux fois le code d'extinction
     clignote(4, 100);
 
-    delay(1500);                            //Avec un délai entre les deux pour la confirmation
+    delay(delais);                            //Avec un délai entre les deux pour la confirmation
 
     sendCode(CODE_ADDR);
     clignote(4, 100);
@@ -336,44 +346,9 @@ void handleOFF() {
     clignote(2, 100);
   }
 
-  handleRoot();
-}
-
-
-// --------------------------------------------------------------------------------------
-// Eteindre
-// --------------------------------------------------------------------------------------
-void handleOFF1() {
-
-  sendCode(CODE_ADDR);
-  clignote(4, 100);
-
-  handleRoot();
-}
-
-// --------------------------------------------------------------------------------------
-// Eteindre avec confirmation
-// --------------------------------------------------------------------------------------
-void handleOFF2() {
-
-  sendCode(CODE_ADDR);
-  clignote(4, 100);
-
-  delay(1500);
-
-  sendCode(CODE_ADDR);
-  clignote(4, 100);
-
-  handleRoot();
-}
-
-// --------------------------------------------------------------------------------------
-// Eteindre (2ème bouton)
-// --------------------------------------------------------------------------------------
-void handleOFF3() {
-
-  sendCode(CODE_ADDR2);
-  clignote(4, 100);
+  Serial.println(EEPROMReadlong(TYPE_ADDR));
+  Serial.println(EEPROMReadlong(CODE_ADDR2));
+  Serial.println(EEPROMReadlong(BITS_ADDR));
 
   handleRoot();
 }
@@ -391,15 +366,7 @@ void handleExtinction() {
 
   clignote(3, 150);
 
-  String page2;
-  page2 = htmlHeader("Code d'extinction sans confirmation");
-  page2 += "<p>Code d'extinction par defaut enregistrer</p>\
-            <FORM action='/'>\
-             <INPUT TYPE='submit' class='button' VALUE='Retour'></th>\
-             </FORM>";
-  page2 += htmlFooter();
-
-  server.send ( 200, "text/html", page2 );
+  handleRoot();
 }
 
 // --------------------------------------------------------------------------------------
@@ -414,24 +381,72 @@ void handleExtinctionConf() {
   EEPROMWritelong(OFF_ADDR, EEPROMoff);
 
   clignote(3, 150);
-
+//CHOISIR TEMPS
   String page2;
   page2 = htmlHeader("Code d'extinction avec confirmation");
-  page2 += "<p>Code d'extinction par defaut enregistre</p>\
-              <FORM action='/'>\
-             <INPUT TYPE='submit' class='button' VALUE='Retour'></th>\
-             </FORM>";
+  page2 += "<p><h3>Enregistrez la durée du délai de confirmation :</h3></p>\
+            <FORM action='/duree'>\  
+                <p><input type='radio' NAME='duree' value='1'> 1 seconde</p>\
+                <p><input type='radio' NAME='duree' value='2'> 2 secondes</p>\
+                <p><input type='radio' NAME='duree' value='3'> 3 secondes</p>\
+                <p><input type='radio' NAME='duree' value='4'> 4 secondes</p>\  
+             <p><INPUT TYPE='submit' class='button' VALUE='Enregistrer'></p>\
+           </FORM>";
   page2 += htmlFooter();
+
+  server.send ( 200, "text/html", page2 );
+
+}
+
+// --------------------------------------------------------------------------------------
+// Enregistrement du delai pour l'envoi
+// --------------------------------------------------------------------------------------
+void handleDuree() {
+  
+  for (uint8_t i = 0; i < server.args(); i++) {
+    if (server.argName(i) == "duree") {
+     delai = server.arg(i).toInt();
+      Serial.println(delais);
+      break;
+    }
+ }
+   EEPROM.write(DUREE_ADDR, delai);    //On écrit dans l'EEPROM
+  Serial.println(delai);
+
+  delais = EEPROM.read(DUREE_ADDR)*1000;
+  Serial.println(delais);
+
+  server.send ( 200, "text/html", clientRedirect());
+}
+
+// --------------------------------------------------------------------------------------
+// Enregistrement code premier bouton
+// --------------------------------------------------------------------------------------
+void handleCodeON() {
+
+  CodeRecep = 1;
+
+  String page2;
+  page2 = htmlHeader("Recepteur");
+  page2 += "<h3>Activation du recepteur</h3>\
+                    <div id='carre'>\
+                       <p>Passez le boitier en mode reception et enregistrer le code d'allumage</p>\
+                       <FORM action='/'>\
+                       <th><INPUT TYPE='submit' class='button' VALUE='Enregistrer'></th>\
+                  </FORM></div>";
+
+  page2 += htmlFooter();
+
 
   server.send ( 200, "text/html", page2 );
 }
 
 // --------------------------------------------------------------------------------------
-// Code d'extinction different de l'allumage
+// Enregistrement code deuxième bouton
 // --------------------------------------------------------------------------------------
-void handleCodediff() {
+void handleCodeOFF() {
 
-  CodeRecep = 1;
+  CodeRecep = 2;
   EEPROMoff = 3;
   EEPROMWritelong(OFF_ADDR, EEPROMoff);
 
@@ -455,13 +470,23 @@ void handleCodediff() {
 // --------------------------------------------------------------------------------------
 void handleErase() {
 
-  for (int i = 0; i < 512; i++)
-    EEPROM.write(i, 0);
+    for (int i = 0; i < 512; i++)
+      EEPROM.write(i, 0);
+  
+    clignote(10, 50);
+  
+    EEPROMoff=0;
+  
+    nomduDNS = "erasmeVP";
+    configDNS();
+  
+    server.send ( 310, "text/html", clientRedirect());
+    
+    handleRoot();
+  }
 
-  clignote(10, 50);
 
-  handleRoot();
-}
+
 
 
 // --------------------------------------------------------------------------------------
@@ -530,12 +555,11 @@ void setup() {
   server.on("/record", handleRecord);
   server.on("/on", handleON);
   server.on("/off", handleOFF);
-  server.on("/off1", handleOFF1);
-  server.on("/off2", handleOFF2);
-  server.on("/off3", handleOFF3);
+  server.on("/param/protocole/codeON", handleCodeON);
+  server.on("/param/protocole/codeOFF", handleCodeOFF);
   server.on("/param/protocole/extinction", handleExtinction);
   server.on("/param/protocole/extinction/confirmation", handleExtinctionConf);
-  server.on("/param/protocole/codediff", handleCodediff);
+  server.on("/duree", handleDuree);
   server.on("/erase", handleErase);
 
   server.onNotFound(handleNotFound);  //Si on ne trouve pas la page
@@ -678,7 +702,7 @@ void loop(void) {
   server.handleClient();      //On active le serveur
   lecture = digitalRead(inter); //Lecture du switch
 
-  if (lecture == 1 && CodeRecep == 0) {
+  if (lecture == 1 && CodeRecep == 1) {
 
     if (irrecv.decode(&results)) {
 
@@ -693,7 +717,7 @@ void loop(void) {
       irrecv.resume();  // Reçoit la prochaine valeur
     }
   }
-  if (lecture == 1 && CodeRecep == 1) {
+  if (lecture == 1 && CodeRecep == 2) {
 
     if (irrecv.decode(&results)) {
 
