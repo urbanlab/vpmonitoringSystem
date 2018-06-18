@@ -59,4 +59,4 @@ Sur cette interface vous pouvez :
 - **ON :** Permet d'enregistrer le code d'allumage du vidéoprojecteur (N'enregistrer qu'un seul code si celui-ci permet l'allumage et l'extinction du vidéoprojecteur).
 - **OFF :** Enregistre le code d'extinction du vidéoprojecteur.
 - **Protocole d'extinction :** Définit si par défaut, le projecteur nécessite d'envoyer le code une ou deux fois pour s'éteindre.
-- **Réinitialiser :** Réinitialise tous les paramètes.
+- **Réinitialiser :** Réinitialise tous les paramètres.
