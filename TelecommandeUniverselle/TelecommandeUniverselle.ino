@@ -18,13 +18,13 @@
 // --------------------------------------------------------------------------------------
 // Déclaration des variables
 // --------------------------------------------------------------------------------------
-#define TYPE_ADDR 0         //On définit les adresses de départ pour l'EEPROM
-#define CODE_ADDR 32
-#define CODE_ADDR2 64
-#define BITS_ADDR 16
-#define OFF_ADDR 128
-#define DNS_ADDR 160
-#define DUREE_ADDR 320
+#define TYPE_ADDR 0   //On définit les adresses de départ pour l'EEPROM
+#define BITS_ADDR 20
+#define DUREE_ADDR 40
+#define OFF_ADDR 50    
+#define CODE_ADDR 60
+#define CODE_ADDR2 160
+#define DNS_ADDR 300
 
 const int inter = 15;       //Interrupteur sur la PIN 15
 uint16_t RECV_PIN = 14;     //Recepteur sur la PIN 14
@@ -33,7 +33,7 @@ const int A_LED = 12;       //LED sur la PIN 12
 int lecture;                //Variable du switch
 int CodeRecep;             //Variable du deuxième bouton
 int EEPROMoff;                 //Variable du deuxième bouton dans l'EEPROM
-String nomduDNS = "erasmeVP";  //Variable du nom du DNS (de base "erasmevp")
+String nomduDNS;  //Variable du nom du DNS (de base "erasmevp")
 int delai=2000;
 int delais;
 int affichage;
@@ -248,6 +248,7 @@ String getAffichage3(){
 // Config du DNS
 // --------------------------------------------------------------
 void configDNS() {
+
   if (MDNS.begin(strToChar(nomduDNS))) {             //Définition du DNS
     Serial.println("MDNS responder started");
   }
@@ -298,16 +299,20 @@ void handleRecord() {
       break;
     }
   }
-  write_StringEE(DNS_ADDR, recordDNS);    //On écrit en String dans l'EEPROM
 
-  nomduDNS = (read_StringEE(DNS_ADDR, (recordDNS.length() + 1))); //On met la valeur écrite dans l'EEPROM dans une variable
+   for (int i = DNS_ADDR; i < 512; i++) {
+    EEPROM.write(i, 0);
+   }
+   
+  write_StringEE(DNS_ADDR, recordDNS);    //On écrit en String dans l'EEPROM
+  nomduDNS = (read_StringEE(DNS_ADDR, (recordDNS.length() + 1)));
+  EEPROM.commit(); //On met la valeur écrite dans l'EEPROM dans une variable
   Serial.println(strToChar(nomduDNS));
 
   configDNS();      //On actualise le DNS
 
   server.send ( 310, "text/html", clientRedirect());
 
-  server.client().stop();
 
 
 }
@@ -372,12 +377,13 @@ void handleOFF() {
 // --------------------------------------------------------------------------------------
 void handleExtinction() {
 
-  for (int i = 128; i < 160; i++)
+  for (int i = 128; i < 160; i++) {
     EEPROM.write(i, 0);
+  }
 
   EEPROMoff = 1;
   EEPROMWritelong(OFF_ADDR, EEPROMoff);
-
+  EEPROM.commit();
   clignote(3, 150);
 
   handleRoot();
@@ -389,12 +395,13 @@ void handleExtinction() {
 void handleExtinctionConf() {
 
 
-  for (int i = 128; i < 160; i++)
+  for (int i = 128; i < 160; i++) {
     EEPROM.write(i, 0);
+  }
 
   EEPROMoff = 2;
   EEPROMWritelong(OFF_ADDR, EEPROMoff);
-
+  EEPROM.commit();
   clignote(3, 150);
 //CHOISIR TEMPS
   String page2;
@@ -426,6 +433,7 @@ void handleDuree() {
     }
  }
    EEPROM.write(DUREE_ADDR, delai);    //On écrit dans l'EEPROM
+   EEPROM.commit();
   Serial.println(delai);
 
   delais = EEPROM.read(DUREE_ADDR)*1000;
@@ -464,6 +472,7 @@ void handleCodeOFF() {
   CodeRecep = 2;
   EEPROMoff = 3;
   EEPROMWritelong(OFF_ADDR, EEPROMoff);
+  EEPROM.commit();
 
   String page2;
   page2 = htmlHeader("Recepteur");
@@ -490,14 +499,16 @@ void handleCodeOFF() {
 // --------------------------------------------------------------------------------------
 void handleErase() {
 
-    for (int i = 0; i < 512; i++)
+    for (int i = 0; i < 512; i++) {
       EEPROM.write(i, 0);
+      EEPROM.commit();
+    }
   
     clignote(10, 50);
   
     EEPROMoff=0;
   
-    nomduDNS = "erasmeVP";
+    nomduDNS = "";
     configDNS();
   
     server.send ( 310, "text/html", clientRedirect());
