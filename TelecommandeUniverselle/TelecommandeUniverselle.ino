@@ -20,12 +20,12 @@
 // Déclaration des variables
 // --------------------------------------------------------------------------------------
 #define TYPE_ADDR 0   //On définit les adresses de départ pour l'EEPROM
-#define BITS_ADDR 20
-#define DUREE_ADDR 40
-#define OFF_ADDR 50    
-#define CODE_ADDR 60
-#define CODE_ADDR2 160
-#define DNS_ADDR 300
+#define BITS_ADDR 16
+#define DUREE_ADDR 32
+#define OFF_ADDR 48    
+#define CODE_ADDR 64
+#define CODE_ADDR2 128
+#define DNS_ADDR 256
 
 const int inter = 15;       //Interrupteur sur la PIN 15
 uint16_t RECV_PIN = 14;     //Recepteur sur la PIN 14
@@ -33,8 +33,7 @@ const int IR_LED = 13;      //LED infrarouge sur la PIN 13
 const int A_LED = 12;       //LED sur la PIN 12
 int lecture;                //Variable du switch
 int CodeRecep;             //Variable du deuxième bouton
-int EEPROMoff;                 //Variable du deuxième bouton dans l'EEPROM
-String nomduDNS;  //Variable du nom du DNS (de base "erasmevp")
+int EEPROMoff=0;                 //Variable du deuxième bouton dans l'EEPROM
 int delai=2000;
 
 int affichage;
@@ -99,7 +98,7 @@ String htmlHeader(String title) {
   return "<html>\
           <head>\
           <meta charset='utf-8' />\
-            <title>" + nomduDNS + "</title>\
+            <title>" + getDNSname() + "</title>\
             "+getStyle()+"\
           </head>\
           <body>\
@@ -121,7 +120,7 @@ String GetIndex() {
   String page;
 
   String messages = "Nom DNS : ";
-  messages += nomduDNS;
+  messages += getDNSname();
   messages += " / Adresse IP : ";
   messages += humanReadableIp(WiFi.localIP());
 
@@ -141,7 +140,7 @@ String GetIndex() {
           <div class='carre'>\
                     <h4>Nom du DNS</h4>\
                      <FORM action='/record'>\
-                       <p><input type='text' NAME='dnsName' VALUE=" + nomduDNS + ">.local</a>\
+                       <p><input type='text' NAME='dnsName' VALUE=" + getDNSname() + ">.local</a>\
                        <INPUT TYPE='submit' class='button' VALUE='Envoyer'></p>\
                      </FORM>\
              <table>\
@@ -190,7 +189,7 @@ String clientRedirect() {
   return "<html>\
 <head>\
   "+getStyle()+"\
-  <meta http-equiv='refresh' content='0; URL=http://" + nomduDNS + ".local/\' />\
+  <meta http-equiv='refresh' content='0; URL=http://" + read_StringEE(DNS_ADDR, 50) + ".local/\' />\
 </head>\
 <body>\
 <h1>Redirection en cours</h1>\
@@ -203,7 +202,7 @@ String clientRedirect() {
 // Affichage config
 // --------------------------------------------------------------
 String getAffichage(){
-  if (EEPROMoff==1)   {
+  if (EEPROM.read(OFF_ADDR)==1)   {
     return "<FORM action='/param/protocole/extinction'>\
               <p><INPUT TYPE='submit' class='button disabled' VALUE=\"Envoyer le code d'extinction une fois  \"></p>\
             </FORM>";
@@ -218,7 +217,7 @@ String getAffichage(){
 // Affichage config
 // --------------------------------------------------------------
 String getAffichage2(){    
-    if (EEPROMoff==2) {
+    if (EEPROM.read(OFF_ADDR)==2) {
       return "<FORM action='/param/protocole/extinction/confirmation'>\
           <p><INPUT TYPE='submit' class='button disabled' VALUE=\"Envoyer le code d'extinction deux fois\">   "+ afficherDelai() +"</p>\
       </FORM>";
@@ -233,7 +232,7 @@ String getAffichage2(){
 // Affichage config
 // --------------------------------------------------------------
 String getAffichage3(){    
-    if (EEPROMoff==3) {
+    if (EEPROM.read(OFF_ADDR)==3) {
       return "<FORM action='/param/protocole/codeOFF'>\
           <th><INPUT TYPE='submit' class='button disabled' VALUE='OFF'>   "+ afficherDelai() +"</th>\
       </FORM>";
@@ -248,9 +247,9 @@ String getAffichage3(){
 // --------------------------------------------------------------
 // Config du DNS
 // --------------------------------------------------------------
-void configDNS() {
+void configDNS(String NomDNS) {
 
-  if (MDNS.begin(strToChar(nomduDNS))) {             //Définition du DNS
+  if (MDNS.begin(strToChar(NomDNS))) {             //Définition du DNS
     Serial.println("MDNS responder started");
   }
 }
@@ -288,7 +287,46 @@ char* strToChar(String s) {
   return ret;
 }
 
+// --------------------------------------------------------------
+// Fonction lecture d'EEPROM
+// --------------------------------------------------------------
+void EEPROMread() {
 
+    Serial.println();
+    Serial.print("Nom du DNS : ");
+    Serial.println(read_StringEE(DNS_ADDR, 50));
+
+    Serial.print("Variable EEPROMoff : ");
+    Serial.println(EEPROMReadlong(OFF_ADDR));
+
+    Serial.print("Type du signal : ");
+    Serial.println(EEPROMReadlong(TYPE_ADDR));
+    
+    Serial.print("Code du signal : ");
+    Serial.println(EEPROMReadlong(CODE_ADDR));
+
+    Serial.print("Code du signal d'extinction : ");
+    Serial.println(EEPROMReadlong(CODE_ADDR2));
+
+    Serial.print("Bits du signal : ");
+    Serial.println(EEPROMReadlong(BITS_ADDR));
+
+    Serial.print("Duree choisie : ");
+    Serial.println((EEPROM.read(DUREE_ADDR))*1000);
+  }
+
+// --------------------------------------------------------------------------------------
+// Nom du DNS
+// --------------------------------------------------------------------------------------
+String getDNSname() {
+  String dnsName="erasme-vp";
+    String tmp = read_StringEE(DNS_ADDR, 50);
+    if (tmp != ""){
+      dnsName=tmp;
+    }
+    return dnsName;
+}
+  
 // --------------------------------------------------------------------------------------
 // Bouton Envoyer du DNS
 // --------------------------------------------------------------------------------------
@@ -302,16 +340,15 @@ void handleRecord() {
     }
   }
 
-   for (int i = DNS_ADDR; i < 512; i++) {
-    EEPROM.write(i, 0);
-   }
+    eraseEEPROM(DNS_ADDR, 512);
+   //for (int i = DNS_ADDR; i < 512; i++) {
+   // EEPROM.write(i, 0);
+   //}
    
   write_StringEE(DNS_ADDR, recordDNS);    //On écrit en String dans l'EEPROM
-  nomduDNS = (read_StringEE(DNS_ADDR, (recordDNS.length() + 1)));
-  EEPROM.commit(); //On met la valeur écrite dans l'EEPROM dans une variable
-  Serial.println(strToChar(nomduDNS));
+  EEPROM.commit();
 
-  configDNS();      //On actualise le DNS
+  configDNS(read_StringEE(DNS_ADDR, (recordDNS.length() + 1)));     
 
   server.send ( 310, "text/html", clientRedirect());
 
@@ -328,9 +365,7 @@ void handleON() {
 
   clignote(2, 200);
 
-  Serial.println(EEPROMReadlong(TYPE_ADDR));
-  Serial.println(EEPROMReadlong(CODE_ADDR));
-  Serial.println(EEPROMReadlong(BITS_ADDR));
+  EEPROMread();
 
   handleRoot();
 }
@@ -368,11 +403,7 @@ void handleOFF() {
     irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR2), EEPROMReadlong(BITS_ADDR));                   //On envoie le code d'extinction correspondant au 2ème bouton
     clignote(2, 100);
   }
-
-  Serial.println(EEPROMReadlong(TYPE_ADDR));
-  Serial.println(EEPROMReadlong(CODE_ADDR2));
-  Serial.println(EEPROMReadlong(BITS_ADDR));
-
+  
   handleRoot();
 }
 
@@ -381,12 +412,10 @@ void handleOFF() {
 // --------------------------------------------------------------------------------------
 void handleExtinction() {
 
-  for (int i = 128; i < 160; i++) {
-    EEPROM.write(i, 0);
-  }
+  eraseEEPROM(OFF_ADDR, CODE_ADDR);
 
   EEPROMoff = 1;
-  EEPROMWritelong(OFF_ADDR, EEPROMoff);
+  EEPROM.write(OFF_ADDR, EEPROMoff);
   EEPROM.commit();
   clignote(3, 150);
 
@@ -398,13 +427,10 @@ void handleExtinction() {
 // --------------------------------------------------------------------------------------
 void handleExtinctionConf() {
 
-
-  for (int i = 128; i < 160; i++) {
-    EEPROM.write(i, 0);
-  }
+  eraseEEPROM(OFF_ADDR, CODE_ADDR);
 
   EEPROMoff = 2;
-  EEPROMWritelong(OFF_ADDR, EEPROMoff);
+  EEPROM.write(OFF_ADDR, EEPROMoff);
   EEPROM.commit();
   clignote(3, 150);
 //CHOISIR TEMPS
@@ -508,8 +534,7 @@ void handleErase() {
     clignote(10, 50);
   
     EEPROMoff=0;
-  
-    configDNS();
+    EEPROM.write(OFF_ADDR, EEPROMoff);
   
     server.send ( 310, "text/html", clientRedirect());
     
@@ -580,14 +605,7 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-
-  String dnsName="erasme-vp";
-  String tmp = read_StringEE(DNS_ADDR, 50);
-  if (tmp != ""){
-    dnsName=tmp;
-  }
-
-  configDNS();
+  configDNS(getDNSname());
 
   server.on("/", handleRoot);
   server.on("/record", handleRecord);
@@ -604,6 +622,8 @@ void setup() {
 
   server.begin();
   Serial.println("HTTP server started");
+
+  EEPROMread();
 
 }
 

@@ -1,12 +1,13 @@
 #include <EEPROM.h>
 
 // --------------------------------------------------------------------------------------
-// On écrit en string dans l'EEPROM  (Lien de la page Web : http://mario.mtechcreations.com/programing/write-string-to-arduino-eeprom/)
+// Fonction pour effacer mémoire EEPROM
 // --------------------------------------------------------------------------------------
-   for (int i = DNS_ADDR; i < 512; i++) {
+void eraseEEPROM(int DEBUT_ADDR, int FIN_ADDR) {
+for (int i = DEBUT_ADDR; i < FIN_ADDR; i++) {
     EEPROM.write(i, 0);
    }
-   gi
+}
 // --------------------------------------------------------------------------------------
 // On écrit en string dans l'EEPROM  (Lien de la page Web : http://mario.mtechcreations.com/programing/write-string-to-arduino-eeprom/)
 // --------------------------------------------------------------------------------------
