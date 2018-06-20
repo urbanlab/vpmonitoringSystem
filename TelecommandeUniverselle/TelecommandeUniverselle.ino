@@ -295,7 +295,7 @@ void EEPROMread() {
 
     Serial.println();
     Serial.print("Nom du DNS : ");
-    Serial.println(read_StringEE(DNS_ADDR, 50));
+    Serial.println(getDNSname());
 
     Serial.print("Variable EEPROMoff : ");
     Serial.println(EEPROMReadlong(OFF_ADDR));
@@ -527,7 +527,7 @@ void handleCodeOFF() {
 // --------------------------------------------------------------------------------------
 void handleErase() {
 
-    for (int i = 0; i < 512; i++) {
+    for (int i = 0; i < 1024; i++) {
       EEPROM.write(i, 0);
       EEPROM.commit();
     }
