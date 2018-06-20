@@ -14,6 +14,7 @@
 #include <IRutils.h>
 #include <port.h>
 #include <EEPROM.h>
+#include "DataEEPROM.h"
 
 // --------------------------------------------------------------------------------------
 // Déclaration des variables
@@ -35,7 +36,7 @@ int CodeRecep;             //Variable du deuxième bouton
 int EEPROMoff;                 //Variable du deuxième bouton dans l'EEPROM
 String nomduDNS;  //Variable du nom du DNS (de base "erasmevp")
 int delai=2000;
-int delais;
+
 int affichage;
 // --------------------------------------------------------------------------------------
 // Identifiant de connexion au wifi
@@ -259,6 +260,7 @@ void configDNS() {
 // --------------------------------------------------------------
 String afficherDelai() {
   String printDelai="";
+  int delais = EEPROM.read(DUREE_ADDR)*1000;
 
   if (delais == 1000){
     printDelai="Durée définie : 1 seconde";
@@ -338,6 +340,8 @@ void handleON() {
 // Eteindre avec l'EEPROM
 // --------------------------------------------------------------------------------------
 void handleOFF() {
+
+  int delais = EEPROM.read(DUREE_ADDR)*1000;
 
   if (EEPROMReadlong(OFF_ADDR) == 1) {    //Si Eteindre à été choisi
     irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR), EEPROMReadlong(BITS_ADDR));
@@ -425,21 +429,18 @@ void handleExtinctionConf() {
 // --------------------------------------------------------------------------------------
 void handleDuree() {
   
+  int delai=2000;
+  
   for (uint8_t i = 0; i < server.args(); i++) {
     if (server.argName(i) == "duree") {
      delai = server.arg(i).toInt();
-      Serial.println(delais);
       break;
     }
  }
    EEPROM.write(DUREE_ADDR, delai);    //On écrit dans l'EEPROM
    EEPROM.commit();
-  Serial.println(delai);
-
-  delais = EEPROM.read(DUREE_ADDR)*1000;
-  Serial.println(delais);
-
-  server.send ( 200, "text/html", clientRedirect());
+ 
+  handleRoot();
 }
 
 // --------------------------------------------------------------------------------------
@@ -508,7 +509,6 @@ void handleErase() {
   
     EEPROMoff=0;
   
-    nomduDNS = "";
     configDNS();
   
     server.send ( 310, "text/html", clientRedirect());
@@ -580,6 +580,13 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
+
+  String dnsName="erasme-vp";
+  String tmp = read_StringEE(DNS_ADDR, 50);
+  if (tmp != ""){
+    dnsName=tmp;
+  }
+
   configDNS();
 
   server.on("/", handleRoot);
@@ -599,131 +606,6 @@ void setup() {
   Serial.println("HTTP server started");
 
 }
-
-
-// --------------------------------------------------------------------------------------
-// On écrit en string dans l'EEPROM  (Lien de la page Web : http://mario.mtechcreations.com/programing/write-string-to-arduino-eeprom/)
-// --------------------------------------------------------------------------------------
-bool write_StringEE(int Addr, String input)
-{
-  char cbuff[input.length() + 1]; //Finds length of string to make a buffer
-  input.toCharArray(cbuff, input.length() + 1); //Converts String into character array
-  return eeprom_write_string(Addr, cbuff); //Saves String
-}
-
-//Updated 4/10/16 cast type replaces concat
-
-//Given the starting address, and the length, this function will return
-//a String and not a Char array
-String read_StringEE(int Addr, int length)
-{
-
-  char cbuff[length + 1];
-  eeprom_read_string(Addr, cbuff, length + 1);
-
-  String stemp(cbuff);
-  return stemp;
-
-}
-
-boolean eeprom_write_bytes(int startAddr, const byte * array, int numBytes) {
-  // counter
-  int i;
-
-
-  for (i = 0; i < numBytes; i++) {
-    EEPROM.write(startAddr + i, array[i]);
-  }
-
-  return true;
-}
-
-
-// Writes a string starting at the specified address.
-// Returns true if the whole string is successfully written.
-// Returns false if the address of one or more bytes fall outside the allowed range.
-// If false is returned, nothing gets written to the eeprom.
-boolean eeprom_write_string(int addr, const char* string) {
-
-  int numBytes; // actual number of bytes to be written
-
-  //write the string contents plus the string terminator byte (0x00)
-  numBytes = strlen(string) + 1;
-
-  return eeprom_write_bytes(addr, (const byte*)string, numBytes);
-}
-
-boolean eeprom_read_string(int addr, char* buffer, int bufSize) {
-  byte ch; // byte read from eeprom
-  int bytesRead; // number of bytes read so far
-
-  if (bufSize == 0) { // how can we store bytes in an empty buffer ?
-    return false;
-  }
-
-  // is there is room for the string terminator only, no reason to go further
-  if (bufSize == 1) {
-    buffer[0] = 0;
-    return true;
-  }
-
-  bytesRead = 0; // initialize byte counter
-  ch = EEPROM.read(addr + bytesRead); // read next byte from eeprom
-  buffer[bytesRead] = ch; // store it into the user buffer
-  bytesRead++; // increment byte counter
-
-  // stop conditions:
-  // - the character just read is the string terminator one (0x00)
-  // - we have filled the user buffer
-  // - we have reached the last eeprom address
-  while ( (ch != 0x00) && (bytesRead < bufSize)) {
-    // if no stop condition is met, read the next byte from eeprom
-    ch = EEPROM.read(addr + bytesRead);
-    buffer[bytesRead] = ch; // store it into the user buffer
-    bytesRead++; // increment byte counter
-  }
-
-  // make sure the user buffer has a string terminator, (0x00) as its last byte
-  if ((ch != 0x00) && (bytesRead >= 1)) {
-    buffer[bytesRead - 1] = 0;
-  }
-
-  return true;
-}
-// --------------------------------------------------------------------------------------
-// On écrit en long int dans l'EEPROM
-// --------------------------------------------------------------------------------------
-void EEPROMWritelong(int address, long value)
-{
-  //Decomposition from a long to 4 bytes by using bitshift.
-  //One = Most significant -> Four = Least significant byte
-  byte four = (value & 0xFF);
-  byte three = ((value >> 8) & 0xFF);
-  byte two = ((value >> 16) & 0xFF);
-  byte one = ((value >> 24) & 0xFF);
-
-  //Write the 4 bytes into the eeprom memory.
-  EEPROM.write(address, four);
-  EEPROM.write(address + 1, three);
-  EEPROM.write(address + 2, two);
-  EEPROM.write(address + 3, one);
-}
-
-// --------------------------------------------------------------------------------------
-// On lit en long int dans l'EEPROM
-// --------------------------------------------------------------------------------------
-long EEPROMReadlong(long address)
-{
-  //Read the 4 bytes from the eeprom memory.
-  long four = EEPROM.read(address);
-  long three = EEPROM.read(address + 1);
-  long two = EEPROM.read(address + 2);
-  long one = EEPROM.read(address + 3);
-
-  //Return the recomposed long by using bitshift.
-  return ((four << 0) & 0xFF) + ((three << 8) & 0xFFFF) + ((two << 16) & 0xFFFFFF) + ((one << 24) & 0xFFFFFFFF);
-}
-
 
 // --------------------------------------------------------------------------------------------------------------
 // Loop
@@ -763,3 +645,4 @@ void loop(void) {
     }
   }
 }
+
