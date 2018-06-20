@@ -184,12 +184,12 @@ String getStyle() {
 // --------------------------------------------------------------
 // Redirection client
 // --------------------------------------------------------------
-String clientRedirect() {
+String clientRedirectDNS() {
 
   return "<html>\
 <head>\
   "+getStyle()+"\
-  <meta http-equiv='refresh' content='0; URL=http://" + read_StringEE(DNS_ADDR, 50) + ".local/\' />\
+  <meta http-equiv='refresh' content='0; URL=http://" + getDNSname() + ".local/\' />\
 </head>\
 <body>\
 <h1>Redirection en cours</h1>\
@@ -197,6 +197,7 @@ String clientRedirect() {
 </html>";
 
 }
+
 
 // --------------------------------------------------------------
 // Affichage config
@@ -350,7 +351,7 @@ void handleRecord() {
 
   configDNS(read_StringEE(DNS_ADDR, (recordDNS.length() + 1)));     
 
-  server.send ( 310, "text/html", clientRedirect());
+  server.send ( 310, "text/html", clientRedirectDNS());
 
 
 
@@ -536,7 +537,7 @@ void handleErase() {
     EEPROMoff=0;
     EEPROM.write(OFF_ADDR, EEPROMoff);
   
-    server.send ( 310, "text/html", clientRedirect());
+    server.send ( 310, "text/html", clientRedirectDNS());
     
     handleRoot();
   }
