@@ -1,0 +1,8 @@
+// --------------------------------------------------------------------------------------
+// Identifiant de connexion au wifi et pour la mise à jour OTA
+// --------------------------------------------------------------------------------------
+const char* ssid = "Your-ssid";         //SSID du wifi
+const char* password = "YourSuperSecretPwd";     //Mot de passe du wifi
+const char* OTApassword = "OtherSecretPwd";     //Mot de passe du OTA update
+
+

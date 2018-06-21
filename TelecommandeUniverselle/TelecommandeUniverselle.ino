@@ -12,10 +12,11 @@
 #include <IRsend.h>
 #include <IRrecv.h>
 #include <IRutils.h>
-
+#//include <port.h>
 #include <EEPROM.h>
 #include "DataEEPROM.h"
 #include "OTAfunctions.h"
+#include "config.h"
 
 // --------------------------------------------------------------------------------------
 // Déclaration des variables
@@ -39,13 +40,6 @@ int EEPROMoff = 0;               //Variable du deuxième bouton dans l'EEPROM
 int delai = 2000;
 
 int affichage;
-// --------------------------------------------------------------------------------------
-// Identifiant de connexion au wifi
-// --------------------------------------------------------------------------------------
-const char* ssid = "erasme-guests";         //SSID du wifi
-const char* password = "guests@erasme";     //Mot de passe du wifi
-const char* OTApassword = "1234";     //Mot de passe du OTA update
-
 
 // --------------------------------------------------------------------------------------
 // "Activation" des librairies
