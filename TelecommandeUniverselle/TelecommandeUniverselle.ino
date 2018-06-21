@@ -131,7 +131,7 @@ String GetIndex() {
   page += "<h3>Allumage et extinction</h3>\
          <div class='carre'>\
              <table>\
-                <tr><h4>Code d'allumage</h4>\
+                <tr><h4>Tester</h4>\
                     <FORM action='/on'>\
                       <th><INPUT TYPE='submit' class='button' VALUE='Allumer'></th>\
                     </FORM>\
@@ -139,9 +139,9 @@ String GetIndex() {
                       <th><INPUT TYPE='submit' class='button' VALUE='Eteindre'></th>\
                     </FORM><tr/></table>\
           </div>\
-            <h3>Parametrage</h3>\
+            <h3>Param&eacute;trage</h3>\
           <div class='carre'>\
-                    <h4>Nom du DNS</h4>\
+                    <h4>Nom DNS</h4>\
                      <FORM action='/record'>\
                        <p><input type='text' NAME='dnsName' VALUE=" + getDNSname() + ">.local</a>\
                        <INPUT TYPE='submit' class='button' VALUE='Envoyer'></p>\
@@ -246,8 +246,8 @@ String getAffichage3() {
 // Config du DNS
 // --------------------------------------------------------------
 void configDNS(String NomDNS) {
-
-  if (MDNS.begin(strToChar(NomDNS))) {             //Définition du DNS
+  Serial.println(NomDNS);
+  if (MDNS.begin(strToChar(NomDNS), WiFi.localIP())) {             //Définition du DNS
     Serial.println("MDNS responder started");
   }
 }
@@ -256,23 +256,12 @@ void configDNS(String NomDNS) {
 // Affichage du délai
 // --------------------------------------------------------------
 String afficherDelai() {
-  String printDelai = "";
-  int delais = EEPROM.read(DUREE_ADDR) * 1000;
-
-  if (delais == 1000) {
-    printDelai = "Durée définie : 1 seconde";
+  String printDelai = "", s = "";
+  int delais = EEPROM.read(DUREE_ADDR);
+  if (delais > 1) {
+    s = "s";
   }
-  else if (delais == 2000) {
-    printDelai = "Durée définie : 2 secondes";
-  }
-  else if (delais == 3000) {
-    printDelai = "Durée définie : 3 secondes";
-  }
-  else if (delais == 4000) {
-    printDelai = "Durée définie : 4 secondes";
-  }
-
-  return printDelai;
+  return "Durée définie : " + String(delais) +  " seconde" + s;
 }
 
 // --------------------------------------------------------------
@@ -545,16 +534,17 @@ void handleNotFound() {
 // Setup
 // --------------------------------------------------------------------------------------------------------------
 void setup() {
+  Serial.begin(115200);           //Activation du monitor
+  Serial.println("----> Entering SETUP...");
+  EEPROM.begin(512);
 
+  
   irsend.begin();                 //On démarre les bilbliothèques
   irrecv.enableIRIn();
 
   pinMode(A_LED, OUTPUT);         //Déclaration des leds
   digitalWrite(A_LED, LOW);
   pinMode(inter, INPUT_PULLUP);
-
-  Serial.begin(115200);           //Activation du monitor
-  EEPROM.begin(512);
 
   WiFi.persistent(false);         //These 3 lines are a required work-around
   WiFi.mode(WIFI_OFF);            //otherwise the module will not reconnect
@@ -571,8 +561,8 @@ void setup() {
   Serial.print("Connected to ");
   Serial.println(ssid);
   Serial.print("IP address: ");
+  WiFi.hostname(getDNSname());
   Serial.println(WiFi.localIP());
-
   configDNS(getDNSname());
 
   server.on("/", handleRoot);
@@ -584,19 +574,21 @@ void setup() {
   server.on("/param/protocole/extinction", handleExtinction);
   server.on("/param/protocole/extinction/confirmation", handleExtinctionConf);
   server.on("/duree", handleDuree);
-
   server.onNotFound(handleNotFound);  //Si on ne trouve pas la page
-
   server.begin();
   Serial.println("HTTP server started");
 
+  MDNS.addService("http", "tcp", 80);
+  Serial.println("MDNS service http on port 80 started");
+  
   EEPROMread();
 
   setupOTA(getDNSname(), OTApassword);
 
   // Signaler visuellement la mise en fonction et la fin du setup
+  Serial.println("----> Exiting SETUP !");
   clignote(10, 50);
-
+  
 }
 
 // --------------------------------------------------------------------------------------------------------------
@@ -639,5 +631,4 @@ void loop(void) {
     }
   }
 }
-
 
