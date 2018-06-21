@@ -22,10 +22,11 @@
 #define TYPE_ADDR 0   //On définit les adresses de départ pour l'EEPROM
 #define BITS_ADDR 16
 #define DUREE_ADDR 32
-#define OFF_ADDR 48    
-#define CODE_ADDR 64
-#define CODE_ADDR2 128
-#define DNS_ADDR 256
+#define OFF_ADDR 48
+#define LENGTH_ADDR 64    
+#define CODE_ADDR 80
+#define CODE_ADDR2 144
+#define DNS_ADDR 208
 
 const int inter = 15;       //Interrupteur sur la PIN 15
 uint16_t RECV_PIN = 14;     //Recepteur sur la PIN 14
@@ -153,12 +154,6 @@ String GetIndex() {
                     <h4>Protocole d'extinction</h4>\
                      "+getAffichage()+"\
                      "+getAffichage2()+"\
-          </div>\
-              <h3>Réinitialisation</h3>\
-          <div class='carre'>\
-                    <FORM action='/erase'>\
-                       <INPUT TYPE='submit' class='button' id='Reinitialiser' onclick=\"return confirm('Effacer tous les parametres ?')\" VALUE='Réinitialiser'>\
-                    </FORM>\
           </div>";
 
   page += htmlFooter();
@@ -320,7 +315,7 @@ void EEPROMread() {
 // Nom du DNS
 // --------------------------------------------------------------------------------------
 String getDNSname() {
-  String dnsName="erasme-vp";
+  String dnsName="erasmevp";
     String tmp = read_StringEE(DNS_ADDR, 50);
     if (tmp != ""){
       dnsName=tmp;
@@ -340,18 +335,14 @@ void handleRecord() {
       break;
     }
   }
-
-    eraseEEPROM(DNS_ADDR, 512);
-   //for (int i = DNS_ADDR; i < 512; i++) {
-   // EEPROM.write(i, 0);
-   //}
    
   write_StringEE(DNS_ADDR, recordDNS);    //On écrit en String dans l'EEPROM
+  EEPROM.write(LENGTH_ADDR, recordDNS.length() + 1);
   EEPROM.commit();
 
-  configDNS(read_StringEE(DNS_ADDR, (recordDNS.length() + 1)));     
+  configDNS(getDNSname());     
 
-  server.send ( 310, "text/html", clientRedirectDNS());
+  server.send ( 301, "text/html", clientRedirectDNS());
 
 
 
@@ -413,8 +404,6 @@ void handleOFF() {
 // --------------------------------------------------------------------------------------
 void handleExtinction() {
 
-  eraseEEPROM(OFF_ADDR, CODE_ADDR);
-
   EEPROMoff = 1;
   EEPROM.write(OFF_ADDR, EEPROMoff);
   EEPROM.commit();
@@ -427,8 +416,6 @@ void handleExtinction() {
 // Eteindre avec confirmation (EEPROM)
 // --------------------------------------------------------------------------------------
 void handleExtinctionConf() {
-
-  eraseEEPROM(OFF_ADDR, CODE_ADDR);
 
   EEPROMoff = 2;
   EEPROM.write(OFF_ADDR, EEPROMoff);
@@ -523,30 +510,6 @@ void handleCodeOFF() {
 }
 
 // --------------------------------------------------------------------------------------
-// Erase
-// --------------------------------------------------------------------------------------
-void handleErase() {
-
-    for (int i = 0; i < 1024; i++) {
-      EEPROM.write(i, 0);
-      EEPROM.commit();
-    }
-  
-    clignote(10, 50);
-  
-    EEPROMoff=0;
-    EEPROM.write(OFF_ADDR, EEPROMoff);
-  
-    server.send ( 310, "text/html", clientRedirectDNS());
-    
-    handleRoot();
-  }
-
-
-
-
-
-// --------------------------------------------------------------------------------------
 // Affichage de la page web de base
 // --------------------------------------------------------------------------------------
 void handleRoot() {
@@ -617,7 +580,6 @@ void setup() {
   server.on("/param/protocole/extinction", handleExtinction);
   server.on("/param/protocole/extinction/confirmation", handleExtinctionConf);
   server.on("/duree", handleDuree);
-  server.on("/erase", handleErase);
 
   server.onNotFound(handleNotFound);  //Si on ne trouve pas la page
 
@@ -666,4 +628,5 @@ void loop(void) {
     }
   }
 }
+
 

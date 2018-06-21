@@ -1,5 +1,6 @@
 #include <EEPROM.h>
 
+
 // --------------------------------------------------------------------------------------
 // Fonction pour effacer mémoire EEPROM
 // --------------------------------------------------------------------------------------
@@ -8,6 +9,7 @@ for (int i = DEBUT_ADDR; i < FIN_ADDR; i++) {
     EEPROM.write(i, 0);
    }
 }
+
 // --------------------------------------------------------------------------------------
 // On écrit en string dans l'EEPROM  (Lien de la page Web : http://mario.mtechcreations.com/programing/write-string-to-arduino-eeprom/)
 // --------------------------------------------------------------------------------------
