@@ -12,7 +12,6 @@
 #include <IRsend.h>
 #include <IRrecv.h>
 #include <IRutils.h>
-#include <port.h>
 #include <EEPROM.h>
 #include "DataEEPROM.h"
 
