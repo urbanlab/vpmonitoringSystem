@@ -7,7 +7,7 @@ int OTAport = 8266;
 
 void setupOTA(String dnsName, const char* pwd) {
   //char myDNSName[50] = dnsName;
-// Port defaults to 8266
+  // Port defaults to 8266
   ArduinoOTA.setPort(OTAport);
 
   // Hostname defaults to esp8266-[ChipID]
@@ -19,7 +19,7 @@ void setupOTA(String dnsName, const char* pwd) {
   ArduinoOTA.onStart([]() {
     Serial.println("Start updating software");
   });
-  
+
   ArduinoOTA.onEnd([]() {
     Serial.println("\nEnd of software update.");
     Serial.println("Reseting Feather...");
@@ -29,7 +29,7 @@ void setupOTA(String dnsName, const char* pwd) {
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
   });
-  
+
   ArduinoOTA.onError([](ota_error_t error) {
     Serial.printf("Error[%u]: ", error);
     if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
@@ -38,7 +38,7 @@ void setupOTA(String dnsName, const char* pwd) {
     else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
     else if (error == OTA_END_ERROR) Serial.println("End Failed");
   });
-  
+
   ArduinoOTA.begin();
   Serial.println("\nReady for OTA updates.");
   Serial.print("IP address: ");

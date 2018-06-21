@@ -5,9 +5,9 @@
 // Fonction pour effacer mémoire EEPROM
 // --------------------------------------------------------------------------------------
 void eraseEEPROM(int DEBUT_ADDR, int FIN_ADDR) {
-for (int i = DEBUT_ADDR; i < FIN_ADDR; i++) {
+  for (int i = DEBUT_ADDR; i < FIN_ADDR; i++) {
     EEPROM.write(i, 0);
-   }
+  }
 }
 
 // --------------------------------------------------------------------------------------

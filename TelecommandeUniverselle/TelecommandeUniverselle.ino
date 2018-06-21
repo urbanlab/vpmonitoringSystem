@@ -24,7 +24,7 @@
 #define BITS_ADDR 16
 #define DUREE_ADDR 32
 #define OFF_ADDR 48
-#define LENGTH_ADDR 64    
+#define LENGTH_ADDR 64
 #define CODE_ADDR 80
 #define CODE_ADDR2 144
 #define DNS_ADDR 208
@@ -35,8 +35,8 @@ const int IR_LED = 13;      //LED infrarouge sur la PIN 13
 const int A_LED = 12;       //LED sur la PIN 12
 int lecture;                //Variable du switch
 int CodeRecep;             //Variable du deuxième bouton
-int EEPROMoff=0;                 //Variable du deuxième bouton dans l'EEPROM
-int delai=2000;
+int EEPROMoff = 0;               //Variable du deuxième bouton dans l'EEPROM
+int delai = 2000;
 
 int affichage;
 // --------------------------------------------------------------------------------------
@@ -102,7 +102,7 @@ String htmlHeader(String title) {
           <head>\
           <meta charset='utf-8' />\
             <title>" + getDNSname() + "</title>\
-            "+getStyle()+"\
+            " + getStyle() + "\
           </head>\
           <body>\
           <h1>" + title + "</h1>";
@@ -118,8 +118,8 @@ String htmlFooter() {
 // Index html
 // --------------------------------------------------------------
 String GetIndex() {
-  CodeRecep=0;                        //On désactive le récepteur
-  
+  CodeRecep = 0;                      //On désactive le récepteur
+
   String page;
 
   String messages = "Nom DNS : ";
@@ -151,11 +151,11 @@ String GetIndex() {
                      <FORM action='/param/protocole/codeON'>\
                         <th><INPUT TYPE='submit' class='button' VALUE=' ON '></th>\
                      </FORM>\
-                     "+getAffichage3()+"\
+                     " + getAffichage3() + "\
              </table>\
                     <h4>Protocole d'extinction</h4>\
-                     "+getAffichage()+"\
-                     "+getAffichage2()+"\
+                     " + getAffichage() + "\
+                     " + getAffichage2() + "\
           </div>";
 
   page += htmlFooter();
@@ -167,7 +167,7 @@ String GetIndex() {
 // CSS
 // --------------------------------------------------------------
 String getStyle() {
-            return  "<style>\
+  return  "<style>\
                 body{font-family: Arial, sans-serif; font-size: 16px; height: 100%; margin: 0; padding: 0; color: #000; background: hsl(227, 10%, 10%);; color:#fff; margin-left: 1%; margin-top:5%;}\
                 h1 {text-align: center; margin-top: -4%;}\
                 .button {background: none; border: 2px solid #4CAF50; color: white; padding: 15px 32px; text-align: center; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; color:#4CAF50; transition-duration: 0.4s; transition-duration: 0.4s; cursor: pointer;border-radius: 3px;}\
@@ -185,7 +185,7 @@ String clientRedirectDNS() {
 
   return "<html>\
 <head>\
-  "+getStyle()+"\
+  " + getStyle() + "\
   <meta http-equiv='refresh' content='0; URL=http://" + getDNSname() + ".local/\' />\
 </head>\
 <body>\
@@ -199,47 +199,47 @@ String clientRedirectDNS() {
 // --------------------------------------------------------------
 // Affichage config
 // --------------------------------------------------------------
-String getAffichage(){
-  if (EEPROM.read(OFF_ADDR)==1)   {
+String getAffichage() {
+  if (EEPROM.read(OFF_ADDR) == 1)   {
     return "<FORM action='/param/protocole/extinction'>\
               <p><INPUT TYPE='submit' class='button disabled' VALUE=\"Envoyer le code d'extinction une fois  \"></p>\
             </FORM>";
-   }
+  }
   else    {
     return "<FORM action='/param/protocole/extinction'>\
               <p><INPUT TYPE='submit' class='button' VALUE=\"Envoyer le code d'extinction une fois \"></p>\
             </FORM>";
-    }
+  }
 }
 // --------------------------------------------------------------
 // Affichage config
 // --------------------------------------------------------------
-String getAffichage2(){    
-    if (EEPROM.read(OFF_ADDR)==2) {
-      return "<FORM action='/param/protocole/extinction/confirmation'>\
-          <p><INPUT TYPE='submit' class='button disabled' VALUE=\"Envoyer le code d'extinction deux fois\">   "+ afficherDelai() +"</p>\
+String getAffichage2() {
+  if (EEPROM.read(OFF_ADDR) == 2) {
+    return "<FORM action='/param/protocole/extinction/confirmation'>\
+          <p><INPUT TYPE='submit' class='button disabled' VALUE=\"Envoyer le code d'extinction deux fois\">   " + afficherDelai() + "</p>\
       </FORM>";
-    }
-    else {
-      return "<FORM action='/param/protocole/extinction/confirmation'>\
+  }
+  else {
+    return "<FORM action='/param/protocole/extinction/confirmation'>\
           <p><INPUT TYPE='submit' class='button' VALUE=\"Envoyer le code d'extinction deux fois\"></p>\
       </FORM>";
-    }
+  }
 }
 // --------------------------------------------------------------
 // Affichage config
 // --------------------------------------------------------------
-String getAffichage3(){    
-    if (EEPROM.read(OFF_ADDR)==3) {
-      return "<FORM action='/param/protocole/codeOFF'>\
-          <th><INPUT TYPE='submit' class='button disabled' VALUE='OFF'>   "+ afficherDelai() +"</th>\
+String getAffichage3() {
+  if (EEPROM.read(OFF_ADDR) == 3) {
+    return "<FORM action='/param/protocole/codeOFF'>\
+          <th><INPUT TYPE='submit' class='button disabled' VALUE='OFF'>   " + afficherDelai() + "</th>\
       </FORM>";
-    }
-    else {
-      return "<FORM action='/param/protocole/codeOFF'>\
+  }
+  else {
+    return "<FORM action='/param/protocole/codeOFF'>\
           <th><INPUT TYPE='submit' class='button' VALUE='OFF'></th>\
       </FORM>";
-    }
+  }
 }
 
 // --------------------------------------------------------------
@@ -256,20 +256,20 @@ void configDNS(String NomDNS) {
 // Affichage du délai
 // --------------------------------------------------------------
 String afficherDelai() {
-  String printDelai="";
-  int delais = EEPROM.read(DUREE_ADDR)*1000;
+  String printDelai = "";
+  int delais = EEPROM.read(DUREE_ADDR) * 1000;
 
-  if (delais == 1000){
-    printDelai="Durée définie : 1 seconde";
+  if (delais == 1000) {
+    printDelai = "Durée définie : 1 seconde";
   }
-  else if (delais == 2000){
-    printDelai="Durée définie : 2 secondes";
+  else if (delais == 2000) {
+    printDelai = "Durée définie : 2 secondes";
   }
-  else if (delais == 3000){
-    printDelai="Durée définie : 3 secondes";
+  else if (delais == 3000) {
+    printDelai = "Durée définie : 3 secondes";
   }
-  else if (delais == 4000){
-    printDelai="Durée définie : 4 secondes";
+  else if (delais == 4000) {
+    printDelai = "Durée définie : 4 secondes";
   }
 
   return printDelai;
@@ -290,41 +290,41 @@ char* strToChar(String s) {
 // --------------------------------------------------------------
 void EEPROMread() {
 
-    Serial.println();
-    Serial.print("Nom DNS du feather : ");
-    Serial.println(getDNSname() + ".local");
+  Serial.println();
+  Serial.print("Nom DNS du feather : ");
+  Serial.println(getDNSname() + ".local");
 
-    Serial.print("Variable EEPROMoff : ");
-    Serial.println(EEPROMReadlong(OFF_ADDR));
+  Serial.print("Variable EEPROMoff : ");
+  Serial.println(EEPROMReadlong(OFF_ADDR));
 
-    Serial.print("Type du signal : ");
-    Serial.println(EEPROMReadlong(TYPE_ADDR));
-    
-    Serial.print("Code du signal : ");
-    Serial.println(EEPROMReadlong(CODE_ADDR));
+  Serial.print("Type du signal : ");
+  Serial.println(EEPROMReadlong(TYPE_ADDR));
 
-    Serial.print("Code du signal d'extinction : ");
-    Serial.println(EEPROMReadlong(CODE_ADDR2));
+  Serial.print("Code du signal : ");
+  Serial.println(EEPROMReadlong(CODE_ADDR));
 
-    Serial.print("Bits du signal : ");
-    Serial.println(EEPROMReadlong(BITS_ADDR));
+  Serial.print("Code du signal d'extinction : ");
+  Serial.println(EEPROMReadlong(CODE_ADDR2));
 
-    Serial.print("Duree choisie : ");
-    Serial.println((EEPROM.read(DUREE_ADDR))*1000);
-  }
+  Serial.print("Bits du signal : ");
+  Serial.println(EEPROMReadlong(BITS_ADDR));
+
+  Serial.print("Duree choisie : ");
+  Serial.println((EEPROM.read(DUREE_ADDR)) * 1000);
+}
 
 // --------------------------------------------------------------------------------------
 // Nom du DNS
 // --------------------------------------------------------------------------------------
 String getDNSname() {
-  String dnsName="erasmevp";
-    String tmp = read_StringEE(DNS_ADDR, 50);
-    if (tmp != ""){
-      dnsName=tmp;
-    }
-    return dnsName;
+  String dnsName = "erasmevp";
+  String tmp = read_StringEE(DNS_ADDR, 50);
+  if (tmp != "") {
+    dnsName = tmp;
+  }
+  return dnsName;
 }
-  
+
 // --------------------------------------------------------------------------------------
 // Bouton Envoyer du DNS
 // --------------------------------------------------------------------------------------
@@ -337,12 +337,12 @@ void handleRecord() {
       break;
     }
   }
-   
+
   write_StringEE(DNS_ADDR, recordDNS);    //On écrit en String dans l'EEPROM
   EEPROM.write(LENGTH_ADDR, recordDNS.length() + 1);
   EEPROM.commit();
 
-  configDNS(getDNSname());     
+  configDNS(getDNSname());
 
   server.send ( 301, "text/html", clientRedirectDNS());
 
@@ -370,11 +370,11 @@ void handleON() {
 // --------------------------------------------------------------------------------------
 void handleOFF() {
 
-  int delais = EEPROM.read(DUREE_ADDR)*1000;
+  int delais = EEPROM.read(DUREE_ADDR) * 1000;
 
   if (EEPROMReadlong(OFF_ADDR) == 1) {    //Si Eteindre à été choisi
     irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR), EEPROMReadlong(BITS_ADDR));
-                  //On envoie qu'une seul fois le code d'extinction
+    //On envoie qu'une seul fois le code d'extinction
     clignote(4, 100);
   }
 
@@ -389,7 +389,7 @@ void handleOFF() {
   }
 
   else if (EEPROMReadlong(OFF_ADDR) == 3) { //Si Code d'extinction different de l'allumage à été choisi
-   irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR2), EEPROMReadlong(BITS_ADDR));
+    irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR2), EEPROMReadlong(BITS_ADDR));
     clignote(2, 100);
 
     delay(delais);
@@ -397,7 +397,7 @@ void handleOFF() {
     irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR2), EEPROMReadlong(BITS_ADDR));                   //On envoie le code d'extinction correspondant au 2ème bouton
     clignote(2, 100);
   }
-  
+
   handleRoot();
 }
 
@@ -423,15 +423,15 @@ void handleExtinctionConf() {
   EEPROM.write(OFF_ADDR, EEPROMoff);
   EEPROM.commit();
   clignote(3, 150);
-//CHOISIR TEMPS
+  //CHOISIR TEMPS
   String page2;
   page2 = htmlHeader("Code d'extinction avec confirmation");
   page2 += "<p><h3>Enregistrez la durée du délai de confirmation :</h3></p>\
-            <FORM action='/duree'>\  
+            <FORM action='/duree'>\
                 <p><input type='radio' NAME='duree' value='1'> 1 seconde</p>\
                 <p><input type='radio' NAME='duree' value='2'> 2 secondes</p>\
                 <p><input type='radio' NAME='duree' value='3'> 3 secondes</p>\
-                <p><input type='radio' NAME='duree' value='4'> 4 secondes</p>\  
+                <p><input type='radio' NAME='duree' value='4'> 4 secondes</p>\
              <p><INPUT TYPE='submit' class='button' VALUE='Enregistrer'></p>\
            </FORM>";
   page2 += htmlFooter();
@@ -444,18 +444,18 @@ void handleExtinctionConf() {
 // Enregistrement du delai pour l'envoi
 // --------------------------------------------------------------------------------------
 void handleDuree() {
-  
-  int delai=2000;
-  
+
+  int delai = 2000;
+
   for (uint8_t i = 0; i < server.args(); i++) {
     if (server.argName(i) == "duree") {
-     delai = server.arg(i).toInt();
+      delai = server.arg(i).toInt();
       break;
     }
- }
-   EEPROM.write(DUREE_ADDR, delai);    //On écrit dans l'EEPROM
-   EEPROM.commit();
- 
+  }
+  EEPROM.write(DUREE_ADDR, delai);    //On écrit dans l'EEPROM
+  EEPROM.commit();
+
   handleRoot();
 }
 
@@ -497,11 +497,11 @@ void handleCodeOFF() {
                     <div id='carre'>\
                        <p>Passez le boitier en mode reception et enregistrer le code d'extinction</p>\
                        <p><h3>Enregistrez la durée du délai de confirmation :</h3></p>\
-            <FORM action='/duree'>\  
+            <FORM action='/duree'>\
                 <p><input type='radio' NAME='duree' value='1'> 1 seconde</p>\
                 <p><input type='radio' NAME='duree' value='2'> 2 secondes</p>\
                 <p><input type='radio' NAME='duree' value='3'> 3 secondes</p>\
-                <p><input type='radio' NAME='duree' value='4'> 4 secondes</p>\  
+                <p><input type='radio' NAME='duree' value='4'> 4 secondes</p>\
              <p><INPUT TYPE='submit' class='button' VALUE='Enregistrer'></p>\
            </FORM>";
 
