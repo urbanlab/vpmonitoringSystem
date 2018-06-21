@@ -16,7 +16,7 @@ When the switch is desactivated, you can activate the box with internet and the 
 
 The basic application of this box is to turn on projectors via a web interface:
 
-![alt tag](https://user-images.githubusercontent.com/39366401/41417965-0b011036-6fef-11e8-9a5a-fc6e6193c0bf.png)
+![alt tag](https://user-images.githubusercontent.com/39366401/41723272-ebfc651a-756a-11e8-8db7-2e225c96b08d.png)
 
 On this interface you can:
 - **Allumer :** Send the code to turn on the videoprojector.
@@ -25,7 +25,6 @@ On this interface you can:
 - **ON :** Allows to save the code to turn on the videoprojector.
 - **OFF :** Allows to save the code to turn off the videoprojector.
 - **Protocole d'extinction :** By default, some videoprojector needs to send the code once to turn it off but you can also said if you need to send it twice.
-- **Réinitialiser :** Reset all.
 
 /***********************************************************************************************************************************/
 # Télécommande universelle
@@ -50,7 +49,7 @@ La deuxième application de ce boitier est qu'a l'activation sur internet, le bo
 
 L'application de base de ce boîtier est d'allumer des projecteurs via une interface web :
 
-![alt tag](https://user-images.githubusercontent.com/39366401/41417965-0b011036-6fef-11e8-9a5a-fc6e6193c0bf.png)
+![alt tag](https://user-images.githubusercontent.com/39366401/41723272-ebfc651a-756a-11e8-8db7-2e225c96b08d.png)
 
 Sur cette interface vous pouvez :
 - **Allumer :** Envoyer le code d'allumage du projecteur.
@@ -59,4 +58,3 @@ Sur cette interface vous pouvez :
 - **ON :** Permet d'enregistrer le code d'allumage du vidéoprojecteur (N'enregistrer qu'un seul code si celui-ci permet l'allumage et l'extinction du vidéoprojecteur).
 - **OFF :** Enregistrer le code d'extinction du vidéoprojecteur.
 - **Protocole d'extinction :** Définit si par défaut, le projecteur nécessite d'envoyer le code une ou deux fois pour s'éteindre.
-- **Réinitialiser :** Réinitialiser tous les paramètres.
