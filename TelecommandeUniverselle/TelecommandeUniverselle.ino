@@ -12,9 +12,10 @@
 #include <IRsend.h>
 #include <IRrecv.h>
 #include <IRutils.h>
-#include <port.h>
+#//include <port.h>
 #include <EEPROM.h>
 #include "DataEEPROM.h"
+#include "OTAfunctions.h"
 
 // --------------------------------------------------------------------------------------
 // Déclaration des variables
@@ -43,6 +44,7 @@ int affichage;
 // --------------------------------------------------------------------------------------
 const char* ssid = "erasme-guests";         //SSID du wifi
 const char* password = "guests@erasme";     //Mot de passe du wifi
+const char* OTApassword = "1234";     //Mot de passe du OTA update
 
 
 // --------------------------------------------------------------------------------------
@@ -289,8 +291,8 @@ char* strToChar(String s) {
 void EEPROMread() {
 
     Serial.println();
-    Serial.print("Nom du DNS : ");
-    Serial.println(getDNSname());
+    Serial.print("Nom DNS du feather : ");
+    Serial.println(getDNSname() + ".local");
 
     Serial.print("Variable EEPROMoff : ");
     Serial.println(EEPROMReadlong(OFF_ADDR));
@@ -554,6 +556,8 @@ void setup() {
   Serial.begin(115200);           //Activation du monitor
   EEPROM.begin(512);
 
+  WiFi.persistent(false);         //These 3 lines are a required work-around
+  WiFi.mode(WIFI_OFF);            //otherwise the module will not reconnect
   WiFi.mode(WIFI_STA);            //Connexion au wifi
   WiFi.begin(ssid, password);
   Serial.println("");
@@ -588,6 +592,9 @@ void setup() {
 
   EEPROMread();
 
+  setupOTA(getDNSname(), OTApassword);
+
+  // Signaler visuellement la mise en fonction et la fin du setup
   clignote(10, 50);
 
 }
@@ -597,7 +604,9 @@ void setup() {
 // --------------------------------------------------------------------------------------------------------------
 void loop(void) {
 
-  server.handleClient();      //On active le serveur
+  server.handleClient();      //On active le serveur web
+  ArduinoOTA.handle();        // Activation de la mise à jour On The Air
+
   lecture = digitalRead(inter); //Lecture du switch
 
   if (lecture == 1 && CodeRecep == 1) {
