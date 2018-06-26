@@ -21,60 +21,68 @@
 // --------------------------------------------------------------------------------------
 // Déclaration des variables
 // --------------------------------------------------------------------------------------
-#define TYPE_ADDR 0   //On définit les adresses de départ pour l'EEPROM
-#define BITS_ADDR 16
-#define DUREE_ADDR 32
-#define OFF_ADDR 48
-#define LENGTH_ADDR 64
-#define CODE_ADDR 80
-#define CODE_ADDR2 144
-#define DNS_ADDR 208
+// On définit les adresses de départ pour l'EEPROM
+#define TYPE_ADDR 0   // Adresse de stockage du type d'encodage lié à un vidéo-projecteur (= marque du VP)
+#define NB_BITS_ADDR 16  // Adresse de stockage du nb de bits d'encodage des code IR
+#define TIMEOUT_ADDR 32 // Adresse de stockage de la durée entre 2 émissions de code IR
+#define CODE_OFF_ADDR 48   // Adresse de sctockage du code d'extinction
+#define DNS_LENGTH_ADDR 64 
+#define CODE_ADDR 80       // Adresse du code d'allumage/extinction 
+#define CODE_ADDR2 144     // Adresse du code d'extinction, si différent de celui de l'allumage
+#define MDNS_ADDR 208
 
-const int inter = 15;       //Interrupteur sur la PIN 15
-uint16_t RECV_PIN = 14;     //Recepteur sur la PIN 14
-const int IR_LED = 13;      //LED infrarouge sur la PIN 13
-const int A_LED = 12;       //LED sur la PIN 12
-int lecture;                //Variable du switch
-int CodeRecep;             //Variable du deuxième bouton
-int EEPROMoff = 0;               //Variable du deuxième bouton dans l'EEPROM
+// I/O definitions
+#define SW_PIN 15             // Interrupteur sur la PIN 15
+#define RECV_PIN 14           // Recepteur sur la PIN 14
+#define IR_LED 13             // LED infrarouge sur la PIN 13
+#define FEEDBACK_LED 12       // LED sur la PIN 12
+
+
+int CodeRecep;                // Varaible d'état sur le mode Emission ou Réception IR (0=Emission, 1=Réception)
+int EEPROMoff = 0;            // Variable du deuxième bouton dans l'EEPROM
 int delai = 2000;
 
-int affichage;
-
-// --------------------------------------------------------------------------------------
-// "Activation" des librairies
-// --------------------------------------------------------------------------------------
+// Web Server
 ESP8266WebServer server(80);
 
+// Receiver and sender IR
 IRrecv irrecv(RECV_PIN);
 IRsend irsend(IR_LED);
-
 decode_results results;
-
 
 // --------------------------------------------------------------------------------------
 // Fonction pour afficher l'adresse IP en String
 // --------------------------------------------------------------------------------------
 String humanReadableIp(IPAddress ip) {
-  return String(ip[0]) + String(".") + String(ip[1]) + String(".") + String(ip[2]) + String(".") + String(ip[3]);
+  return String(ip[0]) + "." + String(ip[1]) + "." + String(ip[2]) + "." + String(ip[3]);
+}
+
+// --------------------------------------------------------------
+// Convertion String en Char*
+// --------------------------------------------------------------
+char* strToChar(String s) {
+  unsigned int bufSize = s.length() + 1; //String length + null terminator
+  char* ret = new char[bufSize];
+  s.toCharArray(ret, bufSize);
+  return ret;
 }
 
 // --------------------------------------------------------------------------------------
 // Fonction pour faire clignoter la LED
 // --------------------------------------------------------------------------------------
-void clignote(int a, int b) {
+void LedBlink(int a, int b) {
 
   for (int i = 0; i < 2 * a; i++) {
 
-    digitalWrite(A_LED, !digitalRead(A_LED));
+    digitalWrite(FEEDBACK_LED, !digitalRead(FEEDBACK_LED));
     delay(b);
   }
 }
 
 // --------------------------------------------------------------------------------------
-// On affiche le détail du code enregistrer par le récepteur
+// On affiche le détail du code enregistré par le récepteur
 // --------------------------------------------------------------------------------------
-void afficherDetails() {
+void printRecordedCode() {
   Serial.print("Numero du type d'encodage : ");
   Serial.println(results.decode_type);
 
@@ -85,23 +93,26 @@ void afficherDetails() {
   Serial.print("Nombre de bits : ");
   Serial.println(uint64ToString(results.bits));
 
-  clignote(4, 50);
+  LedBlink(4, 50);
 }
 
 // --------------------------------------------------------------------------------------
-// Affichage de la page web de base
+// Fonction qui renvoie un header HTML
 // --------------------------------------------------------------------------------------
 String htmlHeader(String title) {
   return "<html>\
           <head>\
           <meta charset='utf-8' />\
-            <title>" + getDNSname() + "</title>\
-            " + getStyle() + "\
+            <title>" + getMDNSname() + "</title>\
+            " + css() + "\
           </head>\
           <body>\
           <h1>" + title + "</h1>";
 }
 
+// --------------------------------------------------------------------------------------
+// Fonction qui renvoie un footer HTML
+// --------------------------------------------------------------------------------------
 String htmlFooter() {
   return "</body>\
         </html>";
@@ -111,13 +122,13 @@ String htmlFooter() {
 // --------------------------------------------------------------
 // Index html
 // --------------------------------------------------------------
-String GetIndex() {
+String GetHTMLIndex() {
   CodeRecep = 0;                      //On désactive le récepteur
 
   String page;
 
   String messages = "Nom DNS : ";
-  messages += getDNSname();
+  messages += getMDNSname();
   messages += " / Adresse IP : ";
   messages += humanReadableIp(WiFi.localIP());
 
@@ -137,7 +148,7 @@ String GetIndex() {
           <div class='carre'>\
                     <h4>Nom DNS</h4>\
                      <FORM action='/record'>\
-                       <p><input type='text' NAME='dnsName' VALUE=" + getDNSname() + ">.local</a>\
+                       <p><input type='text' NAME='dnsName' VALUE=" + getMDNSname() + ">.local</a>\
                        <INPUT TYPE='submit' class='button' VALUE='Envoyer'></p>\
                      </FORM>\
              <table>\
@@ -145,11 +156,11 @@ String GetIndex() {
                      <FORM action='/param/protocole/codeON'>\
                         <th><INPUT TYPE='submit' class='button' VALUE=' ON '></th>\
                      </FORM>\
-                     " + getAffichage3() + "\
+                     " + getFormCodeOFF() + "\
              </table>\
                     <h4>Protocole d'extinction</h4>\
-                     " + getAffichage() + "\
-                     " + getAffichage2() + "\
+                     " + getFormOnce() + "\
+                     " + getFormTwice() + "\
           </div>";
 
   page += htmlFooter();
@@ -160,7 +171,7 @@ String GetIndex() {
 // --------------------------------------------------------------
 // CSS
 // --------------------------------------------------------------
-String getStyle() {
+String css() {
   return  "<style>\
                 body{font-family: Arial, sans-serif; font-size: 16px; height: 100%; margin: 0; padding: 0; color: #000; background: hsl(227, 10%, 10%);; color:#fff; margin-left: 1%; margin-top:5%;}\
                 h1 {text-align: center; margin-top: -4%;}\
@@ -175,12 +186,12 @@ String getStyle() {
 // --------------------------------------------------------------
 // Redirection client
 // --------------------------------------------------------------
-String clientRedirectDNS() {
+String clientRedirect() {
 
   return "<html>\
 <head>\
-  " + getStyle() + "\
-  <meta http-equiv='refresh' content='0; URL=http://" + getDNSname() + ".local/\' />\
+  " + css() + "\
+  <meta http-equiv='refresh' content='0; URL=http://" + getMDNSname() + ".local/\' />\
 </head>\
 <body>\
 <h1>Redirection en cours</h1>\
@@ -191,57 +202,55 @@ String clientRedirectDNS() {
 
 
 // --------------------------------------------------------------
-// Affichage config
+// Affichage formulaire de config "code extinction unique"
 // --------------------------------------------------------------
-String getAffichage() {
-  if (EEPROM.read(OFF_ADDR) == 1)   {
-    return "<FORM action='/param/protocole/extinction'>\
-              <p><INPUT TYPE='submit' class='button disabled' VALUE=\"Envoyer le code d'extinction une fois  \"></p>\
-            </FORM>";
+String getFormOnce() {
+  String disabled = "";
+
+  if (EEPROM.read(CODE_OFF_ADDR) == 1)   {
+    disabled = " disabled";
   }
-  else    {
-    return "<FORM action='/param/protocole/extinction'>\
-              <p><INPUT TYPE='submit' class='button' VALUE=\"Envoyer le code d'extinction une fois \"></p>\
-            </FORM>";
-  }
-}
-// --------------------------------------------------------------
-// Affichage config
-// --------------------------------------------------------------
-String getAffichage2() {
-  if (EEPROM.read(OFF_ADDR) == 2) {
-    return "<FORM action='/param/protocole/extinction/confirmation'>\
-          <p><INPUT TYPE='submit' class='button disabled' VALUE=\"Envoyer le code d'extinction deux fois\">   " + afficherDelai() + "</p>\
-      </FORM>";
-  }
-  else {
-    return "<FORM action='/param/protocole/extinction/confirmation'>\
-          <p><INPUT TYPE='submit' class='button' VALUE=\"Envoyer le code d'extinction deux fois\"></p>\
-      </FORM>";
-  }
-}
-// --------------------------------------------------------------
-// Affichage config
-// --------------------------------------------------------------
-String getAffichage3() {
-  if (EEPROM.read(OFF_ADDR) == 3) {
-    return "<FORM action='/param/protocole/codeOFF'>\
-          <th><INPUT TYPE='submit' class='button disabled' VALUE='OFF'>   " + afficherDelai() + "</th>\
-      </FORM>";
-  }
-  else {
-    return "<FORM action='/param/protocole/codeOFF'>\
-          <th><INPUT TYPE='submit' class='button' VALUE='OFF'></th>\
-      </FORM>";
-  }
+  return "<FORM action='/param/protocole/extinction'>\
+            <p><INPUT TYPE='submit' class='button " +  disabled + "' VALUE=\"Envoyer le code d'extinction une fois \"></p>\
+          </FORM>";
 }
 
 // --------------------------------------------------------------
-// Config du DNS
+// Affichage formulaire de config "code extinction confirmé"
 // --------------------------------------------------------------
-void configDNS(String NomDNS) {
+String getFormTwice() {
+  String msgDelais = "", disabled = "";
+
+  if (EEPROM.read(CODE_OFF_ADDR) == 2) {
+    msgDelais = afficherDelais();
+    disabled = " disabled";
+  }
+  return "<FORM action='/param/protocole/extinction/confirmation'>\
+        <p><INPUT TYPE='submit' class='button" + disabled  + "' VALUE=\"Envoyer le code d'extinction deux fois\"> " + msgDelais + "</p>\
+    </FORM>";
+}
+// --------------------------------------------------------------
+// Affichage formulaire de config Stockage de la valeur OFF 
+// si différente de ON
+// --------------------------------------------------------------
+String getFormCodeOFF() {
+  String msgDelais = "", disabled = "";
+
+  if (EEPROM.read(CODE_OFF_ADDR) == 3) {
+    msgDelais = afficherDelais();
+    disabled = " disabled";
+  }
+  return "<FORM action='/param/protocole/codeOFF'>\
+        <th><INPUT TYPE='submit' class='button" + disabled + "' VALUE='OFF'> " + msgDelais + "</th>\
+    </FORM>";
+}
+
+// --------------------------------------------------------------
+// Restart du MDNS du Feather
+// --------------------------------------------------------------
+void startMDNS(String NomDNS) {
   Serial.println(NomDNS);
-  if (MDNS.begin(strToChar(NomDNS), WiFi.localIP())) {             //Définition du DNS
+  if (MDNS.begin(strToChar(NomDNS), WiFi.localIP())) {
     Serial.println("MDNS responder started");
   }
 }
@@ -249,69 +258,59 @@ void configDNS(String NomDNS) {
 // --------------------------------------------------------------
 // Affichage du délai
 // --------------------------------------------------------------
-String afficherDelai() {
-  String printDelai = "", s = "";
-  int delais = EEPROM.read(DUREE_ADDR);
-  if (delais > 1) {
+String afficherDelais() {
+  String s = "";
+  int d = EEPROM.read(TIMEOUT_ADDR);
+  if (d > 1) {
     s = "s";
   }
-  return "Durée définie : " + String(delais) +  " seconde" + s;
-}
-
-// --------------------------------------------------------------
-// Convertion String en Char*
-// --------------------------------------------------------------
-char* strToChar(String s) {
-  unsigned int bufSize = s.length() + 1; //String length + null terminator
-  char* ret = new char[bufSize];
-  s.toCharArray(ret, bufSize);
-  return ret;
+  return "Durée définie : " + String(d) +  " seconde" + s;
 }
 
 // --------------------------------------------------------------
 // Fonction lecture d'EEPROM
 // --------------------------------------------------------------
-void EEPROMread() {
+void EEPROMdump() {
 
   Serial.println();
-  Serial.print("Nom DNS du feather : ");
-  Serial.println(getDNSname() + ".local");
+  Serial.print("Nom MDNS du feather : ");
+  Serial.println(getMDNSname() + ".local");
 
   Serial.print("Variable EEPROMoff : ");
-  Serial.println(EEPROMReadlong(OFF_ADDR));
+  Serial.println(EEPROMReadlong(CODE_OFF_ADDR));
 
-  Serial.print("Type du signal : ");
+  Serial.print("Type de code : ");
   Serial.println(EEPROMReadlong(TYPE_ADDR));
 
-  Serial.print("Code du signal : ");
+  Serial.print("Code IR : ");
   Serial.println(EEPROMReadlong(CODE_ADDR));
 
-  Serial.print("Code du signal d'extinction : ");
+  Serial.print("Code IR du signal d'extinction : ");
   Serial.println(EEPROMReadlong(CODE_ADDR2));
 
-  Serial.print("Bits du signal : ");
-  Serial.println(EEPROMReadlong(BITS_ADDR));
+  Serial.print("Nb de bits du code : ");
+  Serial.println(EEPROMReadlong(NB_BITS_ADDR));
 
-  Serial.print("Duree choisie : ");
-  Serial.println((EEPROM.read(DUREE_ADDR)) * 1000);
+  Serial.print("Délais avant confirmation : ");
+  Serial.println((EEPROM.read(TIMEOUT_ADDR)) * 1000);
 }
 
 // --------------------------------------------------------------------------------------
 // Nom du DNS
 // --------------------------------------------------------------------------------------
-String getDNSname() {
-  String dnsName = "erasmevp";
-  String tmp = read_StringEE(DNS_ADDR, 50);
+String getMDNSname() {
+  String mdnsName = "videoprojector"; // This is default mdns name
+  String tmp = read_StringEE(MDNS_ADDR, 50);
   if (tmp != "") {
-    dnsName = tmp;
+    mdnsName = tmp;
   }
-  return dnsName;
+  return mdnsName;
 }
 
 // --------------------------------------------------------------------------------------
 // Bouton Envoyer du DNS
 // --------------------------------------------------------------------------------------
-void handleRecord() {
+void handleMDNSsetting() {
   String recordDNS = "";
   for (uint8_t i = 0; i < server.args(); i++) {
     if (server.argName(i) == "dnsName") {
@@ -321,64 +320,57 @@ void handleRecord() {
     }
   }
 
-  write_StringEE(DNS_ADDR, recordDNS);    //On écrit en String dans l'EEPROM
-  EEPROM.write(LENGTH_ADDR, recordDNS.length() + 1);
+  write_StringEE(MDNS_ADDR, recordDNS); 
+  EEPROM.write(DNS_LENGTH_ADDR, recordDNS.length() + 1);
   EEPROM.commit();
 
-  configDNS(getDNSname());
-
-  server.send ( 301, "text/html", clientRedirectDNS());
-
-
-
+  // Restart mdns service
+  startMDNS(getMDNSname());
+  // The mdns has changed, so redirect to the new one !
+  server.send ( 301, "text/html", clientRedirect());
 }
 
 // --------------------------------------------------------------------------------------
-// Allumer
+// Envoyer le code d'Allumage
 // -------------------------------------------------------------------------------------
 void handleON() {
-
-  irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR), EEPROMReadlong(BITS_ADDR));
-
-  clignote(2, 200);
-
-  EEPROMread();
-
+  irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR), EEPROMReadlong(NB_BITS_ADDR));
+  LedBlink(2, 200);
+  EEPROMdump();
   handleRoot();
 }
 
 
 // --------------------------------------------------------------------------------------
-// Eteindre avec l'EEPROM
+// Envoyer le code d'extinction 
 // --------------------------------------------------------------------------------------
 void handleOFF() {
+  int delais = EEPROM.read(TIMEOUT_ADDR) * 1000;
 
-  int delais = EEPROM.read(DUREE_ADDR) * 1000;
-
-  if (EEPROMReadlong(OFF_ADDR) == 1) {    //Si Eteindre à été choisi
-    irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR), EEPROMReadlong(BITS_ADDR));
+  if (EEPROMReadlong(CODE_OFF_ADDR) == 1) {    //Si Eteindre à été choisi
+    irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR), EEPROMReadlong(NB_BITS_ADDR));
     //On envoie qu'une seul fois le code d'extinction
-    clignote(4, 100);
+    LedBlink(4, 100);
   }
 
-  else if (EEPROMReadlong(OFF_ADDR) == 2) { //Si Eteindre avec confirmation à été choisi
-    irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR), EEPROMReadlong(BITS_ADDR));                   //On envoie deux fois le code d'extinction
-    clignote(4, 100);
+  else if (EEPROMReadlong(CODE_OFF_ADDR) == 2) { //Si Eteindre avec confirmation à été choisi
+    irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR), EEPROMReadlong(NB_BITS_ADDR));                   //On envoie deux fois le code d'extinction
+    LedBlink(4, 100);
 
     delay(delais);                            //Avec un délai entre les deux pour la confirmation
 
-    irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR), EEPROMReadlong(BITS_ADDR));
-    clignote(4, 100);
+    irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR), EEPROMReadlong(NB_BITS_ADDR));
+    LedBlink(4, 100);
   }
 
-  else if (EEPROMReadlong(OFF_ADDR) == 3) { //Si Code d'extinction different de l'allumage à été choisi
-    irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR2), EEPROMReadlong(BITS_ADDR));
-    clignote(2, 100);
+  else if (EEPROMReadlong(CODE_OFF_ADDR) == 3) { //Si Code d'extinction different de l'allumage à été choisi
+    irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR2), EEPROMReadlong(NB_BITS_ADDR));
+    LedBlink(2, 100);
 
     delay(delais);
 
-    irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR2), EEPROMReadlong(BITS_ADDR));                   //On envoie le code d'extinction correspondant au 2ème bouton
-    clignote(2, 100);
+    irsend.send(EEPROMReadlong(TYPE_ADDR), EEPROMReadlong(CODE_ADDR2), EEPROMReadlong(NB_BITS_ADDR));                   //On envoie le code d'extinction correspondant au 2ème bouton
+    LedBlink(2, 100);
   }
 
   handleRoot();
@@ -390,9 +382,9 @@ void handleOFF() {
 void handleExtinction() {
 
   EEPROMoff = 1;
-  EEPROM.write(OFF_ADDR, EEPROMoff);
+  EEPROM.write(CODE_OFF_ADDR, EEPROMoff);
   EEPROM.commit();
-  clignote(3, 150);
+  LedBlink(3, 150);
 
   handleRoot();
 }
@@ -403,13 +395,13 @@ void handleExtinction() {
 void handleExtinctionConf() {
 
   EEPROMoff = 2;
-  EEPROM.write(OFF_ADDR, EEPROMoff);
+  EEPROM.write(CODE_OFF_ADDR, EEPROMoff);
   EEPROM.commit();
-  clignote(3, 150);
+  LedBlink(3, 150);
   //CHOISIR TEMPS
-  String page2;
-  page2 = htmlHeader("Code d'extinction avec confirmation");
-  page2 += "<p><h3>Enregistrez la durée du délai de confirmation :</h3></p>\
+  String html;
+  html = htmlHeader("Code d'extinction avec confirmation");
+  html += "<p><h3>Enregistrez la durée du délai de confirmation :</h3></p>\
             <FORM action='/duree'>\
                 <p><input type='radio' NAME='duree' value='1'> 1 seconde</p>\
                 <p><input type='radio' NAME='duree' value='2'> 2 secondes</p>\
@@ -417,9 +409,9 @@ void handleExtinctionConf() {
                 <p><input type='radio' NAME='duree' value='4'> 4 secondes</p>\
              <p><INPUT TYPE='submit' class='button' VALUE='Enregistrer'></p>\
            </FORM>";
-  page2 += htmlFooter();
+  html += htmlFooter();
 
-  server.send ( 200, "text/html", page2 );
+  server.send ( 200, "text/html", html );
 
 }
 
@@ -436,7 +428,7 @@ void handleDuree() {
       break;
     }
   }
-  EEPROM.write(DUREE_ADDR, delai);    //On écrit dans l'EEPROM
+  EEPROM.write(TIMEOUT_ADDR, delai);    //On écrit dans l'EEPROM
   EEPROM.commit();
 
   handleRoot();
@@ -449,19 +441,19 @@ void handleCodeON() {
 
   CodeRecep = 1;
 
-  String page2;
-  page2 = htmlHeader("Recepteur");
-  page2 += "<h3>Activation du recepteur</h3>\
+  String html;
+  html = htmlHeader("Recepteur");
+  html += "<h3>Activation du recepteur</h3>\
                     <div id='carre'>\
                        <p>Passez le boitier en mode reception et enregistrer le code d'allumage</p>\
                        <FORM action='/'>\
                        <th><INPUT TYPE='submit' class='button' VALUE='Enregistrer'></th>\
                   </FORM></div>";
 
-  page2 += htmlFooter();
+  html += htmlFooter();
 
 
-  server.send ( 200, "text/html", page2 );
+  server.send ( 200, "text/html", html );
 }
 
 // --------------------------------------------------------------------------------------
@@ -471,12 +463,12 @@ void handleCodeOFF() {
 
   CodeRecep = 2;
   EEPROMoff = 3;
-  EEPROMWritelong(OFF_ADDR, EEPROMoff);
+  EEPROMWritelong(CODE_OFF_ADDR, EEPROMoff);
   EEPROM.commit();
 
-  String page2;
-  page2 = htmlHeader("Recepteur");
-  page2 += "<h3>Activation du recepteur</h3>\
+  String html;
+  html = htmlHeader("Recepteur");
+  html += "<h3>Activation du recepteur</h3>\
                     <div id='carre'>\
                        <p>Passez le boitier en mode reception et enregistrer le code d'extinction</p>\
                        <p><h3>Enregistrez la durée du délai de confirmation :</h3></p>\
@@ -488,10 +480,10 @@ void handleCodeOFF() {
              <p><INPUT TYPE='submit' class='button' VALUE='Enregistrer'></p>\
            </FORM>";
 
-  page2 += htmlFooter();
+  html += htmlFooter();
 
 
-  server.send ( 200, "text/html", page2 );
+  server.send ( 200, "text/html", html );
 }
 
 // --------------------------------------------------------------------------------------
@@ -499,7 +491,7 @@ void handleCodeOFF() {
 // --------------------------------------------------------------------------------------
 void handleRoot() {
 
-  server.send ( 200, "text/html", GetIndex());
+  server.send ( 200, "text/html", GetHTMLIndex());
 
 }
 
@@ -536,9 +528,9 @@ void setup() {
   irsend.begin();                 //On démarre les bilbliothèques
   irrecv.enableIRIn();
 
-  pinMode(A_LED, OUTPUT);         //Déclaration des leds
-  digitalWrite(A_LED, LOW);
-  pinMode(inter, INPUT_PULLUP);
+  pinMode(FEEDBACK_LED, OUTPUT);         //Déclaration des leds
+  digitalWrite(FEEDBACK_LED, LOW);
+  pinMode(SW_PIN, INPUT_PULLUP);
 
   WiFi.persistent(false);         //These 3 lines are a required work-around
   WiFi.mode(WIFI_OFF);            //otherwise the module will not reconnect
@@ -555,12 +547,12 @@ void setup() {
   Serial.print("Connected to ");
   Serial.println(ssid);
   Serial.print("IP address: ");
-  WiFi.hostname(getDNSname());
+  WiFi.hostname(getMDNSname());
   Serial.println(WiFi.localIP());
-  configDNS(getDNSname());
+  startMDNS(getMDNSname());
 
   server.on("/", handleRoot);
-  server.on("/record", handleRecord);
+  server.on("/record", handleMDNSsetting);
   server.on("/on", handleON);
   server.on("/off", handleOFF);
   server.on("/param/protocole/codeON", handleCodeON);
@@ -575,13 +567,13 @@ void setup() {
   MDNS.addService("http", "tcp", 80);
   Serial.println("MDNS service http on port 80 started");
   
-  EEPROMread();
+  EEPROMdump();
 
-  setupOTA(getDNSname(), OTApassword);
+  setupOTA(getMDNSname(), OTApassword);
 
   // Signaler visuellement la mise en fonction et la fin du setup
   Serial.println("----> Exiting SETUP !");
-  clignote(10, 50);
+  LedBlink(10, 50);
   
 }
 
@@ -593,35 +585,19 @@ void loop(void) {
   server.handleClient();      //On active le serveur web
   ArduinoOTA.handle();        // Activation de la mise à jour On The Air
 
-  lecture = digitalRead(inter); //Lecture du switch
+  int learnMode = digitalRead(SW_PIN); //Lecture du switch
 
-  if (lecture == 1 && CodeRecep == 1) {
-
+  if (learnMode == 1) {
+    // Si le code d'extintinction est différent du code d'allumage, on l'écrit à CODE_ADDR2
+    int addr_code = (CodeRecep == 2) ? CODE_ADDR2 : CODE_ADDR;
     if (irrecv.decode(&results)) {
-
       EEPROMWritelong(TYPE_ADDR, results.decode_type);   //On ecrit le type de codage dans l'EEPROM
-      EEPROMWritelong(CODE_ADDR, results.value);         //On écrit le code dans l'EEPROM
-      EEPROMWritelong(BITS_ADDR, results.bits);          //On écrit le nombre de bits dans l'EEPROM
+      EEPROMWritelong(addr_code, results.value);         //On écrit le code dans l'EEPROM
+      EEPROMWritelong(NB_BITS_ADDR, results.bits);       //On écrit le nombre de bits dans l'EEPROM
       EEPROM.commit();
-
-      afficherDetails();
-
-
-      irrecv.resume();  // Reçoit la prochaine valeur
-    }
-  }
-  if (lecture == 1 && CodeRecep == 2) {
-
-    if (irrecv.decode(&results)) {
-
-      EEPROMWritelong(TYPE_ADDR, results.decode_type);   //On ecrit le type de codage dans l'EEPROM
-      EEPROMWritelong(CODE_ADDR2, results.value);         //On écrit le code dans l'EEPROM
-      EEPROMWritelong(BITS_ADDR, results.bits);          //On écrit le nombre de bits dans l'EEPROM
-      EEPROM.commit();
-
-      afficherDetails();
-
-      irrecv.resume();  // Reçoit la prochaine valeur
+      // Un petit retour sur serial
+      printRecordedCode();
+      irrecv.resume();  
     }
   }
 }
