@@ -131,6 +131,7 @@ String GetHTMLIndex() {
   messages += getMDNSname();
   messages += " / Adresse IP : ";
   messages += humanReadableIp(WiFi.localIP());
+  messages += " / <small>MAC address : "+ WiFi.macAddress() + "</small>";
 
   page = htmlHeader(messages);
   page += "<h3>Allumage et extinction</h3>\
@@ -549,6 +550,8 @@ void setup() {
   Serial.print("IP address: ");
   WiFi.hostname(getMDNSname());
   Serial.println(WiFi.localIP());
+  Serial.print("MAC address : ");
+  Serial.println(WiFi.macAddress());
   startMDNS(getMDNSname());
 
   server.on("/", handleRoot);
