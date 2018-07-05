@@ -4,7 +4,11 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
+
+#ifdef MDNS_ON
 #include <ESP8266mDNS.h>
+#endif
+
 #ifndef UNIT_TEST
 #include <Arduino.h>
 #endif
@@ -26,7 +30,7 @@
 #define NB_BITS_ADDR 16  // Adresse de stockage du nb de bits d'encodage des code IR
 #define TIMEOUT_ADDR 32 // Adresse de stockage de la durée entre 2 émissions de code IR
 #define CODE_OFF_ADDR 48   // Adresse de sctockage du code d'extinction
-#define DNS_LENGTH_ADDR 64 
+#define DNS_LENGTH_ADDR 64
 #define CODE_ADDR 80       // Adresse du code d'allumage/extinction 
 #define CODE_ADDR2 144     // Adresse du code d'extinction, si différent de celui de l'allumage
 #define MDNS_ADDR 208
@@ -100,10 +104,14 @@ void printRecordedCode() {
 // Fonction qui renvoie un header HTML
 // --------------------------------------------------------------------------------------
 String htmlHeader(String title) {
+  String name = humanReadableIp(WiFi.localIP());
+#ifdef MDNS_ON
+  name = getMDNSname();
+#endif
   return "<html>\
           <head>\
           <meta charset='utf-8' />\
-            <title>" + getMDNSname() + "</title>\
+            <title>" + name + "</title>\
             " + css() + "\
           </head>\
           <body>\
@@ -127,11 +135,15 @@ String GetHTMLIndex() {
 
   String page;
 
-  String messages = "Nom DNS : ";
+  String messages = "";
+#ifdef MDNS_ON
+  messages += "Nom DNS : ";
   messages += getMDNSname();
-  messages += " / Adresse IP : ";
+  messages += " / ";
+#endif
+  messages += "Adresse IP : ";
   messages += humanReadableIp(WiFi.localIP());
-  messages += " / <small>MAC address : "+ WiFi.macAddress() + "</small>";
+  messages += " / <small>MAC address : " + WiFi.macAddress() + "</small>";
 
   page = htmlHeader(messages);
   page += "<h3>Allumage et extinction</h3>\
@@ -146,13 +158,15 @@ String GetHTMLIndex() {
                     </FORM><tr/></table>\
           </div>\
             <h3>Param&eacute;trage</h3>\
-          <div class='carre'>\
-                    <h4>Nom DNS</h4>\
+          <div class='carre'>";
+#ifdef MDNS_ON
+  page +=  "<h4>Nom DNS</h4>\
                      <FORM action='/record'>\
-                       <p><input type='text' NAME='dnsName' VALUE=" + getMDNSname() + ">.local</a>\
+                       <p><input type='text' NAME='dnsName' VALUE=" + getMDNSname() + "></a>\
                        <INPUT TYPE='submit' class='button' VALUE='Envoyer'></p>\
-                     </FORM>\
-             <table>\
+                     </FORM>";
+ #endif
+  page += "<table>\
                 <tr><h4>Enregistrement du code</h4></tr>\
                      <FORM action='/param/protocole/codeON'>\
                         <th><INPUT TYPE='submit' class='button' VALUE=' ON '></th>\
@@ -188,11 +202,16 @@ String css() {
 // Redirection client
 // --------------------------------------------------------------
 String clientRedirect() {
+#ifdef MDNS_ON
+String host = getMDNSname();
+#else
+String host = humanReadableIp(WiFi.localIP());
+#endif
 
   return "<html>\
 <head>\
   " + css() + "\
-  <meta http-equiv='refresh' content='0; URL=http://" + getMDNSname() + ".local/\' />\
+  <meta http-equiv='refresh' content='0; URL=http://" + host + "/\' />\
 </head>\
 <body>\
 <h1>Redirection en cours</h1>\
@@ -231,7 +250,7 @@ String getFormTwice() {
     </FORM>";
 }
 // --------------------------------------------------------------
-// Affichage formulaire de config Stockage de la valeur OFF 
+// Affichage formulaire de config Stockage de la valeur OFF
 // si différente de ON
 // --------------------------------------------------------------
 String getFormCodeOFF() {
@@ -249,13 +268,14 @@ String getFormCodeOFF() {
 // --------------------------------------------------------------
 // Restart du MDNS du Feather
 // --------------------------------------------------------------
+#ifdef MDNS_ON
 void startMDNS(String NomDNS) {
   Serial.println(NomDNS);
   if (MDNS.begin(strToChar(NomDNS), WiFi.localIP())) {
     Serial.println("MDNS responder started");
   }
 }
-
+#endif
 // --------------------------------------------------------------
 // Affichage du délai
 // --------------------------------------------------------------
@@ -272,11 +292,11 @@ String afficherDelais() {
 // Fonction lecture d'EEPROM
 // --------------------------------------------------------------
 void EEPROMdump() {
-
+#ifdef MDNS_ON
   Serial.println();
   Serial.print("Nom MDNS du feather : ");
-  Serial.println(getMDNSname() + ".local");
-
+  Serial.println(getMDNSname() + "");
+#endif
   Serial.print("Variable EEPROMoff : ");
   Serial.println(EEPROMReadlong(CODE_OFF_ADDR));
 
@@ -299,6 +319,7 @@ void EEPROMdump() {
 // --------------------------------------------------------------------------------------
 // Nom du DNS
 // --------------------------------------------------------------------------------------
+#ifdef MDNS_ON
 String getMDNSname() {
   String mdnsName = "videoprojector"; // This is default mdns name
   String tmp = read_StringEE(MDNS_ADDR, 50);
@@ -307,10 +328,11 @@ String getMDNSname() {
   }
   return mdnsName;
 }
-
+#endif
 // --------------------------------------------------------------------------------------
 // Bouton Envoyer du DNS
 // --------------------------------------------------------------------------------------
+#ifdef MDNS_ON
 void handleMDNSsetting() {
   String recordDNS = "";
   for (uint8_t i = 0; i < server.args(); i++) {
@@ -321,7 +343,7 @@ void handleMDNSsetting() {
     }
   }
 
-  write_StringEE(MDNS_ADDR, recordDNS); 
+  write_StringEE(MDNS_ADDR, recordDNS);
   EEPROM.write(DNS_LENGTH_ADDR, recordDNS.length() + 1);
   EEPROM.commit();
 
@@ -330,7 +352,7 @@ void handleMDNSsetting() {
   // The mdns has changed, so redirect to the new one !
   server.send ( 301, "text/html", clientRedirect());
 }
-
+#endif
 // --------------------------------------------------------------------------------------
 // Envoyer le code d'Allumage
 // -------------------------------------------------------------------------------------
@@ -343,7 +365,7 @@ void handleON() {
 
 
 // --------------------------------------------------------------------------------------
-// Envoyer le code d'extinction 
+// Envoyer le code d'extinction
 // --------------------------------------------------------------------------------------
 void handleOFF() {
   int delais = EEPROM.read(TIMEOUT_ADDR) * 1000;
@@ -525,7 +547,7 @@ void setup() {
   Serial.println("----> Entering SETUP...");
   EEPROM.begin(512);
 
-  
+
   irsend.begin();                 //On démarre les bilbliothèques
   irrecv.enableIRIn();
 
@@ -548,14 +570,19 @@ void setup() {
   Serial.print("Connected to ");
   Serial.println(ssid);
   Serial.print("IP address: ");
+#ifdef MDNS_ON
   WiFi.hostname(getMDNSname());
+#endif
   Serial.println(WiFi.localIP());
   Serial.print("MAC address : ");
   Serial.println(WiFi.macAddress());
+#ifdef MDNS_ON
   startMDNS(getMDNSname());
-
+#endif
   server.on("/", handleRoot);
+  #ifdef MDNS_ON
   server.on("/record", handleMDNSsetting);
+  #endif
   server.on("/on", handleON);
   server.on("/off", handleOFF);
   server.on("/param/protocole/codeON", handleCodeON);
@@ -566,18 +593,18 @@ void setup() {
   server.onNotFound(handleNotFound);  //Si on ne trouve pas la page
   server.begin();
   Serial.println("HTTP server started");
-
+#ifdef MDNS_ON
   MDNS.addService("http", "tcp", 80);
   Serial.println("MDNS service http on port 80 started");
-  
+#endif
   EEPROMdump();
 
-  setupOTA(getMDNSname(), OTApassword);
+  setupOTA(OTApassword);
 
   // Signaler visuellement la mise en fonction et la fin du setup
   Serial.println("----> Exiting SETUP !");
   LedBlink(10, 50);
-  
+
 }
 
 // --------------------------------------------------------------------------------------------------------------
@@ -600,7 +627,7 @@ void loop(void) {
       EEPROM.commit();
       // Un petit retour sur serial
       printRecordedCode();
-      irrecv.resume();  
+      irrecv.resume();
     }
   }
 }

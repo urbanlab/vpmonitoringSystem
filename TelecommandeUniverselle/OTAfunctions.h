@@ -4,8 +4,9 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 int OTAport = 8266;
+#define FEEDBACK_LED 12
 
-void setupOTA(String dnsName, const char* pwd) {
+void setupOTA(/*String dnsName,*/ const char* pwd) {
   //char myDNSName[50] = dnsName;
   // Port defaults to 8266
   ArduinoOTA.setPort(OTAport);
@@ -28,6 +29,7 @@ void setupOTA(String dnsName, const char* pwd) {
 
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Serial.printf("\nProgress: %u%%\r", (progress / (total / 100)));
+    digitalWrite(FEEDBACK_LED, !digitalRead(FEEDBACK_LED));
   });
 
   ArduinoOTA.onError([](ota_error_t error) {

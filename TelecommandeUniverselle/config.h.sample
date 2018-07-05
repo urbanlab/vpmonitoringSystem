@@ -4,5 +4,8 @@
 const char* ssid = "Your-ssid";         //SSID du wifi
 const char* password = "YourSuperSecretPwd";     //Mot de passe du wifi
 const char* OTApassword = "OtherSecretPwd";     //Mot de passe du OTA update
-
+// Decommenter s'il y a besoin du mDNS local de la télécommande.
+// Le moyen le plus sûr est plutôt de gérer cette reconnaissance au niveau de serveur DNS du réseau local, 
+// en affectant aussi une IP Fixe à la télécommande
+//#define MDNS_ON                           // Activer le mDNS .local
 
