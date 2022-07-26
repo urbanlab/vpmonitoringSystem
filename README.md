@@ -38,7 +38,7 @@ This IR remote controller works with multicast DNS. It is only reachable by IP o
 
 Télécommande universelle commandée par Arduino
 
-Téléchargement de la librairie : https://github.com/markszabo/IRremoteESP8266
+Téléchargement de la librairie : https://github.com/markszabo/IRremoteESP8266 (v2.4.2)
 
 ## Hardware : 
 
